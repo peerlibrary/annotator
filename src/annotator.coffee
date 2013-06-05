@@ -871,6 +871,8 @@ class Annotator extends Delegator
           # Does this plugin have a dedicated async init task recipe?
           # If yes, then we can create a task using this info.
           taskInfo = plugin.initTaskInfo
+          if taskInfo? and not taskInfo.name
+            taskInfo.name = "plugin " + name
 
           if (not taskInfo?) and plugin.pluginInit?
             @tasklog.trace "Plugin '" + name + "' does not have initTaskInfo. Creating init task around the synchronous pluginInit() method."
