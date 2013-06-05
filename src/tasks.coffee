@@ -101,13 +101,14 @@ class _Task
         @log.error exception
         @dfd.failed "Exception: " + exception.message
 
-  _skip: =>
+  _skip: (reason) =>
     if @started then return
     @started = true
+    reason = "Skipping, because " + reason
     @dfd.notify
       progress: 1
-      text: "Skipping, because some dependencies have failed."
-    @dfd._reject()
+      text: reason
+    @dfd._reject @_name + " was skipped, because " + reason
 
 class _TaskGen
   constructor: (info) ->
@@ -143,6 +144,7 @@ class _CompositeTask extends _Task
     @subTasks = {}
     @pendingSubTasks = 0
     @failedSubTasks = 0
+    @failReasons = []
     @trigger = this.createSubTask
       weight: 0
       name: info.name + "__init"
@@ -152,7 +154,7 @@ class _CompositeTask extends _Task
 
   _finished: ->
     if @failedSubTasks
-      @dfd.failed()        
+      @dfd.failed @failReasons
     else
       @dfd.ready()
 
@@ -179,8 +181,9 @@ class _CompositeTask extends _Task
       @pendingSubTasks -= 1
       this._finished() unless @pendingSubTasks
 
-    task.fail =>
+    task.fail (reason) =>
       @failedSubTasks += 1
+      if reason then @failReasons.push reason
       @pendingSubTasks -= 1
       this._finished() unless @pendingSubTasks
         

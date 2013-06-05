@@ -127,8 +127,9 @@
 
       devAnnotator.init.done(function() {
         console.log("We are ready to rock!")
-      }).fail(function() {
-        console.log("Sorry, annotator has failed to take off.")
+      }).fail(function(reasons) {
+        console.log("Sorry, annotator has failed to take off. Reason[s]:");
+        console.log(reasons);
       });
 
     </script>
