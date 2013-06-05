@@ -116,15 +116,20 @@ class _TaskGen
     @name = info.name
     @todo = info.code
     @count = 0
+    @composite = info.composite
 
   create: (info, useDefaultProgress = true) ->
     @count += 1
+    info ?= {}
     instanceInfo =
       name: @name + " #" + @count + ": " + info.instanceName
       code: @todo
       deps: info.deps
-      data: info.data  
-    @manager.create instanceInfo, useDefaultProgress
+      data: info.data
+    if @composite
+      @manager.createComposite instanceInfo
+    else 
+      @manager.create instanceInfo, useDefaultProgress
 
 class _CompositeTask extends _Task
   constructor: (info) ->
@@ -151,6 +156,7 @@ class _CompositeTask extends _Task
       code: (task) ->
         # A trigget does not need to do anything.
         # Resolving the trigger task will trigger the rest of the tasks.
+    @lastSubTask = @trigger
 
   _finished: ->
     if @failedSubTasks
@@ -211,6 +217,8 @@ class _CompositeTask extends _Task
         report.text = task._name + ": " + info.text
 
       @dfd.notify report
+
+    @lastSubTask = task
 
     task
 
