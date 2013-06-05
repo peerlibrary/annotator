@@ -123,7 +123,7 @@ class Annotator.Plugin.Auth extends Annotator.Plugin
       code: (task) =>
         if @options.token
           this.setToken(@options.token)
-          task.ready token: @token
+          task.ready
         else
           this.requestToken()
 
@@ -161,7 +161,7 @@ class Annotator.Plugin.Auth extends Annotator.Plugin
       @annotator.log.error "#{msg} #{err}", xhr
       Annotator.showNotification("#{msg} #{xhr.responseText}", Annotator.Notification.ERROR)
       if @initTask?.state() is "pending"
-        @initTask.dfd.failed msg
+        @initTask.dfd.failed msg + xhr.responseText
 
     # always reset the requestInProgress indicator
     .always =>
@@ -251,7 +251,7 @@ class Annotator.Plugin.Auth extends Annotator.Plugin
   #
   # Returns nothing.
   withToken: (callback) ->
-    if @asyncMode
+    if @annotator.asyncMode
       # In Async mode, task dependencies provide the same (and more) functionalty.
       throw new Error "You are not supposed to use withToken in Async Mode!"
 
