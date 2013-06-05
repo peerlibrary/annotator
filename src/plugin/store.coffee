@@ -89,7 +89,6 @@ class Annotator.Plugin.Store extends Annotator.Plugin
   constructor: (element, options) ->
     super
     @annotations = []
-    @loadGen = 
 
     @initTaskInfo =
       code: (task) =>
@@ -314,8 +313,9 @@ class Annotator.Plugin.Store extends Annotator.Plugin
   #
   # Returns nothing.
   _onLoadAnnotations: (data=[]) =>
-    @annotations = @annotations.concat(data)
-    @annotator.loadAnnotations(data.slice()) # Clone array
+    if data.length # Don't bother with empty arrays
+      @annotations = @annotations.concat(data)
+      @annotator.loadAnnotations(data.slice()) # Clone array
 
     # Do we have a pending loading task?
     if @pendingLoading?.state() is "pending"
