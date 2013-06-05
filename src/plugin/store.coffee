@@ -89,18 +89,29 @@ class Annotator.Plugin.Store extends Annotator.Plugin
   constructor: (element, options) ->
     super
     @annotations = []
+    @loadGen = 
 
     @initTaskInfo =
-      name: "load annotations on store plugin init"
       code: (task) =>
         unless Annotator.supported()
           task.failed "Annotator is not supported."
+
+        @tasks = @annotator.tasks
+        @loadGen = @tasks.createGenerator
+          name: "load annotations"
+          code: (task) =>
+            this.pendingLoading = task
+            this._getAnnotations()
+
+        unless options.skipLoading
+          # Launch a loading task, and add this as a sub-task to init
+          @annotator.init.addSubTask task: this.startLoading "plugin init", false
         
-        if options.skipLoading
-          # We were instructed to skip the initial loading of annotations
-          task.ready()
-        else
-          this._getAnnotations()
+          # If the init task is already runnig, then let's reschedule it!
+          if @annotator.init.started then @tasks.schedule()
+
+        # Finish the init task 
+        task.ready()
 
   # Public: Initialises the plugin and loads the latest annotations. If the
   # Auth plugin is also present it will request an auth token before loading
@@ -112,7 +123,11 @@ class Annotator.Plugin.Store extends Annotator.Plugin
   #
   # Returns nothing.
   pluginInit: ->
+    # Nothing to do if Annotator is not supported        
     return unless Annotator.supported()
+
+    # Were we told not to load annotations on plugin init?
+    return if @options.skipLoading
 
     # In sync mode, the dependency on auth depends on the order
     # the plugins are added. If it is there, then we are supposed to wait for it.
@@ -120,6 +135,15 @@ class Annotator.Plugin.Store extends Annotator.Plugin
       @annotator.plugins.Auth.withToken(this._getAnnotations)
     else
       this._getAnnotations()
+
+  # Creates a new task to load annotations.
+  # (Will call _getAnnotations internally.)
+  # 
+  # Returns the generated tasks.
+  startLoading: (reason, useDefaultProgress = true) ->
+    info =
+      instanceName: reason
+    @loadGen.create info, useDefaultProgress
 
   # Checks the loadFromSearch option and if present loads annotations using
   # the Store#loadAnnotationsFromSearch method rather than Store#loadAnnotations.
@@ -275,10 +299,12 @@ class Annotator.Plugin.Store extends Annotator.Plugin
   _onLoadAnnotations: (data=[]) =>
     @annotations = @annotations.concat(data)
     @annotator.loadAnnotations(data.slice()) # Clone array
-    # Are we in the middle of a pending initTask?
-    if @initTask?.state() is "pending"
+
+    # Do we have a pending loading task?
+    if @pendingLoading?.state() is "pending"
+      [task, @pendingLoading] = [@pendingLoading, null]
       # Signal that the task has finished.
-      @initTask.dfd.ready()
+      task.ready()
 
   # Public: Performs the same task as Store.#loadAnnotations() but calls the
   # 'search' URI with an optional query string.
@@ -501,8 +527,9 @@ class Annotator.Plugin.Store extends Annotator.Plugin
 
     Annotator.showNotification message, Annotator.Notification.ERROR
 
-    @annotator.log.error Annotator._t("API request failed:") + " '#{xhr.status}'"
-    # Are were in the middle of an async init process?
-    if @initTask?.state() is "pending"
+    @annotator.log.error Annotator._t("API request failed:"), xhr
+    # Do we have a panding loading task?
+    if @pendingLoading?.state() is "pending"
+      [task, @pendingLoading] = [@pendingLoading, null]        
       # We must signal that the task has failed.
-      @initTask.dfd.failed "API request failed."
+      task.failed "Coult not load annotations: API request failed."
