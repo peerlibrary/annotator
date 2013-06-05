@@ -101,7 +101,7 @@ class Annotator extends Delegator
     super
     givenName = options?.annotatorName ? "Annotator"
     @log ?= getXLogger givenName
-    @log.info "Annotator constructor running with options", options
+    @log.debug "Annotator constructor running with options", options
     myName = @log.name
 
     @tasklog ?= getXLogger myName + " tasks"
@@ -857,7 +857,7 @@ class Annotator extends Delegator
   #
   # Returns itself to allow chaining.
   addPlugin: (name, options) ->
-    @log.info "Loading plugin '" + name + "'..."
+    @log.debug "Loading plugin '" + name + "'..."
     if @plugins[name]
       @log.error _t("You cannot have more than one instance of any plugin.")
     else

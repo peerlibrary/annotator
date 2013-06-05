@@ -252,7 +252,7 @@ class TaskManager
     unless name?
       throw new Error "Trying to create a task without a name!"
     if @tasks[name]?
-      @log.info "Overriding existing task '" + name +
+      @log.debug "Overriding existing task '" + name +
         "' with new definition!"
     name
 

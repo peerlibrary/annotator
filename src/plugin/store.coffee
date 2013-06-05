@@ -117,7 +117,7 @@ class Annotator.Plugin.Store extends Annotator.Plugin
               searchOptions.uri = href
               this.loadAnnotationsFromSearch searchOptions
 
-        unless options.skipLoading
+        unless options.noLoading
           # Launch a loading task, and add this as a sub-task to init
           @annotator.init.addSubTask task: this.startLoading "plugin init", [], false
         
@@ -141,7 +141,7 @@ class Annotator.Plugin.Store extends Annotator.Plugin
     return unless Annotator.supported()
 
     # Were we told not to load annotations on plugin init?
-    return if @options.skipLoading
+    return if @options.noLoading
 
     # In sync mode, the dependency on auth depends on the order
     # the plugins are added. If it is there, then we are supposed to wait for it.
