@@ -97,15 +97,29 @@ class Annotator.Plugin.Store extends Annotator.Plugin
           task.failed "Annotator is not supported."
 
         @tasks = @annotator.tasks
+        @log = @annotator.log
         @loadGen = @tasks.createGenerator
           name: "load annotations"
-          code: (task) =>
+          code: (task, data) =>
+            extraURIs = data.extraURIs
             this.pendingLoading = task
-            this._getAnnotations()
+            this.pendingRequests = 1 + extraURIs.length
+
+            @log.info "Sending request for " + @options.annotationData.uri
+            if @options.loadFromSearch
+              this.loadAnnotationsFromSearch @options.loadFromSearch
+            else
+              this.loadAnnotations()
+
+            searchOptions = $.extend {}, @options.loadFromSearch
+            for href in extraURIs
+              @log.info "Also loading annotations for " + href
+              searchOptions.uri = href
+              this.loadAnnotationsFromSearch searchOptions
 
         unless options.skipLoading
           # Launch a loading task, and add this as a sub-task to init
-          @annotator.init.addSubTask task: this.startLoading "plugin init", false
+          @annotator.init.addSubTask task: this.startLoading "plugin init", [], false
         
           # If the init task is already runnig, then let's reschedule it!
           if @annotator.init.started then @tasks.schedule()
@@ -140,9 +154,12 @@ class Annotator.Plugin.Store extends Annotator.Plugin
   # (Will call _getAnnotations internally.)
   # 
   # Returns the generated tasks.
-  startLoading: (reason, useDefaultProgress = true) ->
+  startLoading: (reason, extraURIs = [], useDefaultProgress = true) ->
     info =
       instanceName: reason
+      data:
+        extraURIs: extraURIs
+
     @loadGen.create info, useDefaultProgress
 
   # Checks the loadFromSearch option and if present loads annotations using
@@ -302,9 +319,12 @@ class Annotator.Plugin.Store extends Annotator.Plugin
 
     # Do we have a pending loading task?
     if @pendingLoading?.state() is "pending"
-      [task, @pendingLoading] = [@pendingLoading, null]
-      # Signal that the task has finished.
-      task.ready()
+      # Decrease the number of pending requests
+      @pendingRequests -= 1
+      unless @pendingRequests
+        [task, @pendingLoading] = [@pendingLoading, null]
+        # Signal that the task has finished.
+        task.ready()
 
   # Public: Performs the same task as Store.#loadAnnotations() but calls the
   # 'search' URI with an optional query string.
