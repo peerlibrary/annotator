@@ -122,6 +122,18 @@ class Annotator extends Delegator
     @tasks = new TaskManager myName
     @tasks.addDefaultProgress (info) => this.defaultNotify info
 
+    @loadListTaskGen = @tasks.createGenerator
+      name: "anchoring annotation list"
+      composite: true
+
+    @loadBatchTaskGen = @tasks.createGenerator
+      name: "anchoring annotation batch"
+      code: (task, data) =>
+        for n in data.annotations
+          this.setupAnnotation(n)
+
+        task.ready()
+
     unless @options.noInit
       if @options.asyncInit
         this.initAsync()
@@ -772,22 +784,47 @@ class Annotator extends Delegator
   #
   # Returns itself for chaining.
   loadAnnotations: (annotations=[]) ->
-    loader = (annList=[]) =>
-      now = annList.splice(0,10)
+    # Ignore null lists
+    return unless annotations.length
 
-      for n in now
-        this.setupAnnotation(n)
+    # If we don't have a pending load task, create one
+    unless @pendingLoad
+      @pendingLoad = @loadListTaskGen.create instanceName: ""
+      @pendingLoadList = []
 
-      # If there are more to do, do them after a 10ms break (for browser
-      # responsiveness).
-      if annList.length > 0
-        setTimeout((-> loader(annList)), 10)
-      else
-        this.publish 'annotationsLoaded', [clone]
+      # Do this when this newly created load task is finished
+      @pendingLoad.done =>
+        this.publish 'annotationsLoaded', [@pendingLoadList]
+        delete @pendingLoad
 
-    clone = annotations.slice()
-    loader(annotations) if annotations.length
-    this
+    # Add new list (of annotations to be processed) to the existing one
+    @pendingLoadList = @pendingLoadList.concat annotations
+
+    # Do this until we have processed all of them
+    to = 0
+    while annotations.length
+      # Take the first 10 annotations from the list
+      annBatch = annotations.splice 0, 10
+      [from, to] = [to + 1, to + annBatch.length]
+
+      # Create a sub-task for processing these annotations
+      info =
+        instanceName: from + "-" + to
+        data: annotations:annBatch
+      batchTask = @loadBatchTaskGen.create info, false
+
+      # Add this newly created sub-task to the pending loading task,
+      # with a dependency to the last sub-task. (So that is only
+      # starts when the last one is finished.)
+      @pendingLoad.addSubTask
+        deps: @pendingLoad.lastSubTask
+        weight: annBatch.length
+        task: batchTask
+
+    @tasks.schedule()
+    # Awaken/schedule any new tasks
+
+    this # for chaining
 
   # Public: Calls the Store#dumpAnnotations() method.
   #
