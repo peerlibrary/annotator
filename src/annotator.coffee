@@ -65,6 +65,11 @@ class Annotator extends Delegator
 
   viewerHideTimer: null
 
+  serialize:
+    type: 'blacklist' #either blacklist or whitelist
+    blacklist: ['highlights']
+    whitelist: []
+
   # Public: Creates an instance of the Annotator. Requires a DOM Element in
   # which to watch for annotations as well as any options.
   #
@@ -114,6 +119,25 @@ class Annotator extends Delegator
     @domMapper.setRootNode @wrapper[0]
 
     this
+
+  stringify: (annotation) =>
+    if @serialize.type is 'blacklist'
+      filtered = new Object()
+      for key, val of annotation
+        unless key in @serialize.blacklist
+          filtered[key] = val
+      return JSON.stringify filtered
+
+    if @serialize.type is 'whitelist'
+      filtered = new Object()
+      for key, val of annotation
+        if key in @serialize.whitelist
+          filtered[key] = val
+      return JSON.stringify filtered
+
+    console.warn "Warning! Invalid @serialize.type"
+    JSON.stringify annotation
+
 
   # Perform a scan of the DOM. Required for finding anchors.
   _scan: ->
