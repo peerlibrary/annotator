@@ -694,6 +694,7 @@ class Annotator extends Delegator
   #
   # Returns the initialised annotation.
   setupAnnotation: (annotation) ->
+    @log.trace "Setting up annotation", annotation
     root = @wrapper[0]
     annotation.target or= @selectedTargets
     unless annotation.target?
