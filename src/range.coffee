@@ -162,14 +162,25 @@ class Range.BrowserRange
       r[p + 'Img'] = isImg
 
 
+    if r.start is r.end and r.startOffset is r.endOffset
+      throw new Error "Trying to normalize invalid brower range, where startOffset == endOffset = " + r.startOffset + "!"
+
     changed = false
 
     if r.startOffset > 0
-      if r.start.data.length > r.startOffset
+      if r.start.data.length < r.startOffset
+        # Start offset is _after_  the end of data
+        throw new Error "Normalizing invalid browser range: data length is " +
+          r.start.data.length + ", but wanted start offset is " + r.startOffset
+      else if r.start.data.length > r.startOffset
+        # Start offset is _before_ the end of data. We need to split.
         nr.start = r.start.splitText r.startOffset
 #        console.log "Had to split element at start, at offset " + r.startOffset
+#        console.log "Length of remaining element is: " + r.start.data.length
+#        console.log "Length of new element is : " + nr.start.data.length
         changed = true
       else
+        # Start offset is right at the end of the data.
         nr.start = r.start.nextSibling
 #        console.log "No split neaded at start, already cut."
     else
@@ -178,9 +189,11 @@ class Range.BrowserRange
 
     if r.start is r.end and not r.startImg
       if (r.endOffset - r.startOffset) < nr.start.nodeValue.length
-        nr.start.splitText(r.endOffset - r.startOffset)
+        next = nr.start.splitText(r.endOffset - r.startOffset)
 #        console.log "But had to split element at end at offset " +
 #            (r.endOffset - r.startOffset)
+#        console.log "Length of remaining element is: " + nr.start.data.length
+#        console.log "Length of new element is : " + next.data.length
         changed = true
       else
 #        console.log "End is clean, too."
