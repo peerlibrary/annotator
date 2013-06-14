@@ -289,11 +289,154 @@ The rules of composite tasks are:
 
       tasks.schedule()
 
+Output will be:
 
+ * Big task 2: 0 - Starting
+ * Big task 2: 0 - Small 1: Starting
+ * Big task 2: 0 - Small 2: Starting
+ * Big task 2: 0.3333333333333333 - Small 1: Finished in 102ms.
+ * Big task 2: 1 - Small 2: Finished in 201ms.
+ * Big task 2: 1 - Finished in 205ms.
+ * All done! 
 
-
+As you can see, *Small 2* is added to the composite task after it is already running, but it will still wait for it. You can also see the effect of using a `weight`.
 
 ### Task generators (for repeating tasks)
+
+Sometimes we are not dealing with singleton tasks, but with a whole army of tasks of the same kind. To make these more simple, we have the *Task generators*.
+
+Example first, explanation later:
+
+    case8 = ->
+
+      greeterGen = tasks.createGenerator
+        name: "greeting"
+        code: (task, data) =>
+          setTimeout ( =>
+            console.log "Hi there, " + data.name + "!"
+            task.resolve()
+          ), Math.random() * 1000
+
+      for chick in ["Jill", "Jane", "Veronica", "Clare", "Angel"]
+        greeterGen.create
+          instanceName: chick
+          data:   # This is what will be passed to the code
+            name: chick
+
+      tasks.schedule()
+
+The output will be something like this:
+
+ * greeting #1: Jill: 0 - Starting
+ * greeting #2: Jane: 0 - Starting
+ * greeting #3: Veronica: 0 - Starting
+ * greeting #4: Clare: 0 - Starting
+ * greeting #5: Angel: 0 - Starting
+ * Hi there, Jill!
+ * greeting #1: Jill: 1 - Finished in 30ms.
+ * Hi there, Angel!
+ * greeting #5: Angel: 1 - Finished in 204ms.
+ * Hi there, Jane!
+ * greeting #2: Jane: 1 - Finished in 809ms.
+ * Hi there, Veronica!
+ * greeting #3: Veronica: 1 - Finished in 877ms.
+ * Hi there, Clare!
+ * greeting #4: Clare: 1 - Finished in 890ms. 
+
+So, what happened here?
+ * We created a *Task Generator* object, which can generate similar tasks on request. We have specified the generic name of this class of tasks, and the code that needs to be run in each case.
+ * Then we used this generator to generate a bunch of tasks (one for each chick), and executed those tasks.
+
+We can combine task generators and composite tasks:
+
+    case9 = ->
+
+      fetchGen = tasks.createGenerator
+        name: "fetch"
+        code: (task, data) =>
+          setTimeout ( =>
+            console.log data.name + " has arrived."
+            task.resolve()
+          ), Math.random() * 1000
+
+      greeterGen = tasks.createGenerator
+        name: "greeting"
+        code: (task, data) =>
+          console.log "Hi there, " + data.name + "!"
+          task.resolve()
+
+      task_H = tasks.createComposite
+        name: "Greet everybody"
+
+      task_H.createSubTask
+        weight: 2
+        name: "Great the President"
+        code: (task) =>
+          console.log "Welcome, Mr. President!"
+          task.resolve()
+
+      for chick in ["Jill", "Jane", "Veronica", "Clare"]
+        fetch = fetchGen.create
+          instanceName: chick
+          data: name: chick
+          useDefaultProgress: false
+        task_H.addSubTask task:fetch
+
+        greet = greeterGen.create
+          instanceName: chick
+          data: name: chick
+          useDefaultProgress: false
+          deps: [fetch]
+        task_H.addSubTask task:greet
+     
+      task_H.done => console.log "Everybody is here! Let's party!"
+
+      tasks.schedule()
+
+So, what do we have here?
+ * We create two generators, for two class of tasks
+ * We create a composite task
+ * For each chick, we
+   * create a fetch and a greet task
+   * add a dependency (because we can greet then only when they have arrived)
+   * add both generated tasks as sub-tasks.
+ * When executing the tasks
+   * it takes a random time to fetch each chick
+   * each is greeted as she arrives
+ * The composite task is resolved when all the fetch and greet tasks are resolved.
+
+Output:
+
+ * Greet everybody: 0 - Starting
+ * Greet everybody: 0 - Great the President: Starting
+ * Welcome, Mr. President!
+ * Greet everybody: 0.2 - Great the President: Finished in 1ms.
+ * Greet everybody: 0.2 - fetch #1: Jill: Starting
+ * Greet everybody: 0.2 - fetch #2: Jane: Starting
+ * Greet everybody: 0.2 - fetch #3: Veronica: Starting
+ * Greet everybody: 0.2 - fetch #4: Clare: Starting
+ * Veronica has arrived.
+ * Greet everybody: 0.3 - fetch #3: Veronica: Finished in 101ms.
+ * Greet everybody: 0.3 - greeting #3: Veronica: Starting
+ * Hi there, Veronica!
+ * Greet everybody: 0.4 - greeting #3: Veronica: Finished in 0ms.
+ * Clare has arrived.
+ * Greet everybody: 0.5 - fetch #4: Clare: Finished in 243ms.
+ * Greet everybody: 0.5 - greeting #4: Clare: Starting
+ * Hi there, Clare!
+ * Greet everybody: 0.6 - greeting #4: Clare: Finished in 0ms.
+ * Jill has arrived.
+ * Greet everybody: 0.7 - fetch #1: Jill: Finished in 417ms.
+ * Greet everybody: 0.7 - greeting #1: Jill: Starting
+ * Hi there, Jill!
+ * Greet everybody: 0.8 - greeting #1: Jill: Finished in 0ms.
+ * Jane has arrived. 
+ * Greet everybody: 0.9 - fetch #2: Jane: Finished in 728ms.
+ * Greet everybody: 0.9 - greeting #2: Jane: Starting
+ * Hi there, Jane!
+ * Greet everybody: 1 - greeting #2: Jane: Finished in 0ms.
+ * Greet everybody: 1 - Finished in 740ms.
+ * Everybody is here! Let's party! 
 
 ### Dummy tasks
 
