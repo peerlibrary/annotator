@@ -156,10 +156,11 @@ class Annotator.Plugin.Store extends Annotator.Plugin
   startLoading: (reason, extraURIs = [], useDefaultProgress = true) ->
     info =
       instanceName: reason
+      useDefaultProress: useDefaultProgress
       data:
         extraURIs: extraURIs
 
-    @loadGen.create info, useDefaultProgress
+    @loadGen.create info
 
   # Checks the loadFromSearch option and if present loads annotations using
   # the Store#loadAnnotationsFromSearch method rather than Store#loadAnnotations.

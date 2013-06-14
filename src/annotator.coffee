@@ -213,13 +213,12 @@ class Annotator extends Delegator
       # We were instructed to skip initial DOM scan        
       scan = @init.createDummySubTask name: "Skipping scan"
     else
-      info =
+      scan = @_scanGen.create
         instanceName: "Initial scan"
-        # Scanning requires a configured wrapper
-        deps: ["wrapper"]
-      scan = @_scanGen.create info, false
+        deps: ["wrapper"] # A configured wrapper is required
+        useDefaultProgress: false # This will be a sub-task
       @init.addSubTask weight: 20, task: scan
-
+        
     @init.createSubTask
       name: "document events"
       # We want to listen to events only when everything is ready 
@@ -812,7 +811,8 @@ class Annotator extends Delegator
       info =
         instanceName: from + "-" + to
         data: annotations:annBatch
-      batchTask = @loadBatchTaskGen.create info, false
+        useDefaultProgress: false
+      batchTask = @loadBatchTaskGen.create info
 
       # Add this newly created sub-task to the pending loading task,
       # with a dependency to the last sub-task. (So that is only

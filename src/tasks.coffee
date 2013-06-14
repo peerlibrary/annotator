@@ -58,6 +58,7 @@ class _Task
   addDeps: (toAdd) ->
     unless Array.isArray toAdd then toAdd = [toAdd]
     for dep in toAdd
+      unless dep? then throw Error "Trying to add null dependency!"
       @_deps.push dep
 
   removeDeps: (toRemove) ->
@@ -113,7 +114,7 @@ class _TaskGen
     @count = 0
     @composite = info.composite
 
-  create: (info, useDefaultProgress = true) ->
+  create: (info) ->
     @count += 1
     info ?= {}
     instanceInfo =
@@ -121,10 +122,11 @@ class _TaskGen
       code: @todo
       deps: info.deps
       data: info.data
+      useDefaultProgress: info.useDefaultProgress
     if @composite
       @manager.createComposite instanceInfo
     else 
-      @manager.create instanceInfo, useDefaultProgress
+      @manager.create instanceInfo
 
 class _CompositeTask extends _Task
   constructor: (info) ->
@@ -230,14 +232,16 @@ class _CompositeTask extends _Task
       @log.debug "When defining sub-task '" + info.name + "', overriding this existing sub-task: " + oldSubTaskID
       this._deleteSubTask oldSubTaskID
 
+    info.useDefaultProgress = false
+
     this.addSubTask
       weight: w
-      task: @manager.create(info, false)
+      task: @manager.create info
 
   createDummySubTask: (info) ->
     this.addSubTask
       weight: 0
-      task: @manager.createDummy(info, false)
+      task: @manager.createDummy info
 
 class TaskManager
   constructor: (name) ->
@@ -263,19 +267,20 @@ class TaskManager
         "' with new definition!"
     name
 
-  create: (info, useDefaultProgress = true) ->
+  create: (info) ->
     name = this._checkName info
     info.manager = this
+    info.useDefaultProgress ?= true
     task = new _Task info
     @tasks[task._name] = task
-    if useDefaultProgress
+    if info.useDefaultProgress
       for cb in @defaultProgressCallbacks
         task.progress cb
     task
 
-  createDummy: (info, useDefaultProgress = true) ->
+  createDummy: (info) ->
     info.code = (task) -> task.resolve()
-    this.create info, useDefaultProgress  
+    this.create info
 
   createGenerator: (info) ->
     info.manager = this
