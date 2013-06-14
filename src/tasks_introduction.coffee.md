@@ -110,9 +110,9 @@ A few things to notify here:
  * We have introduced two dependencies:
    * We have manually registered a callback on *task C*.
    * We have added a declarative dependency (with the `deps` option) to *task B*, so that *task B* won't be run until *task C* is finished.
-   The second way of defining dependencies is more flexible; see bellow.
+   The second way of defining dependencies is more flexible; see below.
 
-A task can depend on any number of other tasks, and it's execution will only start when all the dependencies have been fulfilled.
+A task can depend on any number of other tasks, and its execution will only start when all the dependencies have been fulfilled.
 
 In this example, `schedule` will first run *task C* (since it does not have any dependency), and when it's ready, it will execute (in an unspecified order) *Task B* and the manually registered callback. (If we cared for their order, we should add a dependency between them.)
 
@@ -157,9 +157,9 @@ You can also add and remove dependencies after the task have been created, like 
 
       tasks.schedule()
 
-This will make *task D* depend on *task B*, *task E* and *task F*. Both shown methods do the same; you can add dependencies both using the task manager, and using the task objects themselves. Both can accept individual tasks, or lists of tasks. There also have `removeDeps` methods, doing what the name says.
+This will make *task D* depend on *task B*, *task E* and *task F*. Both shown methods do the same; you can add dependencies both using the task manager, and using the task objects themselves. Both can accept individual tasks, or lists of tasks. They also have `removeDeps` methods, doing what the name says.
 
-So, it this example, to output will look like this:
+So, for this example, the output will look like this:
  * task E: 0 - Starting
  * E
  * task E: 1 - Finished in 1ms.
