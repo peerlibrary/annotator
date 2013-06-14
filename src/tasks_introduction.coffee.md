@@ -20,6 +20,18 @@ A task is an individual unit of work. It typically (but not necesseraly) involve
 
 Tasks support automatic dependency management and scheduling.
 
+### Using the task system
+
+The task system is implemented in a single coffee file: tasks.coffee
+
+Dependencies:
+ * jQuery.
+ * the xlog library from dom-text-mapper can be used, but that's not required.
+
+There are no other dependencies.
+
+You just need to include tasks.coffee, and you are all set.
+
 ### The task manager
 
 To do anything with tasks, first you need a task manager:
@@ -280,8 +292,9 @@ Example for this:
 
       task_J = tasks.create   # We create a separate task
         name: "Small 2"
+        # We don't want automatic reporting, since data is 
+        # cascaded to the parent task anyway
         useDefaultProgress: false 
-        # We don't want automatic reporting, since data is cascated to parent anyway
         code: (task) =>
           setTimeout ( => task.resolve()), 200
 
@@ -440,6 +453,95 @@ Output:
  * Greet everybody: 1 - Finished in 740ms.
  * Everybody is here! Let's party! 
 
+Sometimes you may want to create sub-tasks in a composite tasks so that each task is only run when the previous one is finished. You can do it like this:
+
+    case10 = ->
+
+      dance = tasks.createGenerator
+        name: "dance"
+        code: (task, data) =>
+          console.log "Dancing with " + data.name + "..."
+          task.resolve()
+
+      task_K = tasks.createComposite
+        name: "Party"
+
+      for chick in ["Jill", "Jane", "Veronica", "Clare"]
+        task = dance.create
+          instanceName: "with " + chick
+          data: name: chick
+          useDefaultProgress: false
+          deps: [task_K.lastSubTask] # This is where we add the dependency
+
+        task_K.addSubTask task:task
+
+      task_K.done => console.log "Party is over. Let's go home."
+
+      tasks.schedule()
+
+As you can see, when we create the sub-tasks (with the ganerator), we always add
+a dependency to the parent task's last sub-task. This means that the the tasks will be executed sequentially, and only one of them will be running at any given time. 
+
+The output will be:
+ * Party: 0 - Starting
+ * Party: 0 - dance #1: with Jill: Starting
+ * Dancing with Jill...
+ * Party: 0.25 - dance #1: with Jill: Finished in 1ms.
+ * Party: 0.25 - dance #2: with Jane: Starting
+ * Dancing with Jane...
+ * Party: 0.5 - dance #2: with Jane: Finished in 1ms.
+ * Party: 0.5 - dance #3: with Veronica: Starting
+ * Dancing with Veronica...
+ * Party: 0.75 - dance #3: with Veronica: Finished in 1ms.
+ * Party: 0.75 - dance #4: with Clare: Starting
+ * Dancing with Clare...
+ * Party: 1 - dance #4: with Clare: Finished in 0ms.
+ * Party: 1 - Finished in 16ms.
+ * Party is over. Let's go home. 
+
+Compare this output with that of case 8. The difference is that in case 8, all sub-tasks were launched in parallel. Here, they are launched sequentially.
+
 ### Dummy tasks
 
+Dummy tasks are for situations when you don't really need (or want) to do something, but you still want to signal that you are skipping something. They can be created with one line, and are always resolved immediately. You can use them as dummy dependencies, if the need arises.
+
+Example:
+
+    case11 = ->
+      task_L = tasks.createDummy name: "Don't doing anything"
+
+      task_L.done => console.log "Finished all the hard work."
+
+      tasks.schedule()
+
+Output:
+ * Don't doing anything: 0 - Starting
+ * Don't doing anything: 1 - Finished in 0ms.
+ * Finished all the hard work.
+
+You can also create dummy sub-tasks for composite tasks very easily:
+
+    case12 = ->
+      task_L = tasks.createComposite name: "Big task"
+
+      task_L.createDummySubTask name: "dummy preparation"
+
+      tasks.schedule()
+
+Output:
+ * Big task: 0 - Starting
+ * Big task: 0 - dummy preparation: Starting
+ * Big task: 1 - dummy preparation: Finished in 0ms.
+ * Big task: 1 - Finished in 2ms. 
+
+### When are tasks executed?
+
+That is a tricky question. There is no easy answer, but the guidelines are the following:
+ * Tasks are definitely not executed until all their dependencies are resolved.
+ * Tasks are *usually* triggered ASAP.
+ * When executing several tasks in a line, the system always introduces some small pauses, so that the browser does not block, and it can render the DOM, etc.
+ * If finishing a task triggers the execution of more than one other tasks, there is no guarantee of their order of execution. It's also possible that some of them will be postponed. (This area of the code might change in the future, so I am hesitant to specify this any more now.)
+
+
 ### Other tricks
+
