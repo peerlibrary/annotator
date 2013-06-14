@@ -8,7 +8,7 @@ This file is written in [Literate CoffeeScript](http://ashkenas.com/literate-cof
 
 The recommended way to read it is to view it at GitHub, so that the markup is rendered properly. (And after [this](https://github.com/github/markup/pull/192) will be merged, there will also be syntax highlighting for the code parts.)
 
-To actually see the results of the code bellow, open **task_intro.html** in the root directory of this project.
+To actually see the results of the code below, open **task_intro.html** in the root directory of this project.
 
 ### What is a task?
 
