@@ -65,9 +65,9 @@ Since the task defined in our first example does not have any dependencies, it w
 
 The output looks like this:
 
- * Nameless task #1: 0 - Starting tasks_introduction.js:8
- * Here we go! tasks_introduction.js:16
- * Nameless task #1: 1 - Finished in 7ms. tasks_introduction.js:8
+ * Nameless task #1: 0 - Starting
+ * Here we go!
+ * Nameless task #1: 1 - Finished in 7ms.
  *  Task A is done! 
 
 ### Two approach to dependencies
@@ -106,12 +106,12 @@ In this example, `schedule` will first run *task C* (since it does not have any 
 
 The output will look like this:
 
- * task C: 0 - Starting tasks_introduction.js:8
- * C tasks_introduction.js:40
- * task C: 1 - Finished in 1ms. tasks_introduction.js:8
- * Task C is done! tasks_introduction.js:45
- * task B: 0 - Starting tasks_introduction.js:8
- * B tasks_introduction.js:33
+ * task C: 0 - Starting
+ * C
+ * task C: 1 - Finished in 1ms. 
+ * Task C is done!
+ * task B: 0 - Starting
+ * B
  * task B: 1 - Finished in 0ms. 
 
 ### Changing dependencies on the fly
