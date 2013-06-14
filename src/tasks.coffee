@@ -255,10 +255,14 @@ class TaskManager
 
   tasks: {}
 
+  namelessCounter: 0
+
   _checkName: (info) ->
-    name = info?.name
+    info ?= {}
+    name = info.name
     unless name?
-      throw new Error "Trying to create a task without a name!"
+      @namelessCounter += 1
+      name = info.name = "Nameless task #" + @namelessCounter
     if @tasks[name]?
       @log.debug "Overriding existing task '" + name +
         "' with new definition!"
