@@ -20,7 +20,7 @@ class _Task
     @_data = info.data
     info.deps ?= []
     this.setDeps info.deps
-    @started = false
+    @_started = false
     @dfd = new jQuery.Deferred()
 
     @dfd._notify = @dfd.notify
@@ -51,6 +51,14 @@ class _Task
 
     @dfd.promise this
 
+    # We will override the state() function, to report the new "waiting" state
+    @_state = @state
+    @state = =>
+      if @_started  # Have we started yet?
+        @_state()  # If we have, then report the state as usuel
+      else         
+        "waiting"  # If we have not yet started, then the state is "waiting".
+
   setDeps: (deps) ->
     @_deps = []
     this.addDeps deps
@@ -71,9 +79,8 @@ class _Task
     @_depsResolved = ((if typeof dep is "string" then @manager.lookup dep else dep) for dep in @_deps)
 
   _start: =>
-    if @started
-      @log.debug "This task ('" + @_name + "') has already been started!"
-      return
+    if @state() isnt "waiting" then return
+
     unless @_depsResolved?
       throw Error "Dependencies are not resolved for task '"+ @_name +"'!"
     for dep in @_depsResolved
@@ -84,7 +91,7 @@ class _Task
           "' has not yet been resolved!"
         return
 
-    @started = true
+    @_started = true
     setTimeout =>
       @dfd.notify
         progress: 0
@@ -98,8 +105,8 @@ class _Task
         @dfd.reject "Exception: " + exception.message
 
   _skip: (reason) =>
-    if @started then return
-    @started = true
+    if @state() isnt "waiting" then return
+    @_started = true
     reason = "Skipping, because " + reason
     @dfd.notify
       progress: 1
@@ -316,10 +323,10 @@ class TaskManager
 
   schedule: () ->
     for name, task of @tasks
-      unless task.started
+      if task.state() is "waiting"
         try
           deps = task._resolveDeps()
-          if deps.length is 0 and not task.started
+          if deps.length is 0
             task._start()
           else if deps.length is 1
             deps[0].done task._start
@@ -342,16 +349,16 @@ class TaskManager
     resolved = (name for name, task of @tasks when task.state() is "resolved")
     @log.info "Finished tasks:", resolved
 
-    running = (name for name, task of @tasks when task.state() is "pending" and task.started)
+    running = (name for name, task of @tasks when task.state() is "pending")
     @log.info "Currently running tasks:", running
 
     @log.info "Waiting tasks:"
-    for name, task of @tasks when not task.started
+    for name, task of @tasks when task.state() is "waiting"
       t = "Task '" + name + "'"
       @log.info "Analyzing waiting " + t
       try
         deps = task._resolveDeps()
-        if deps.length is 0 and not task.started
+        if deps.length is 0
           @log.info t + " has no dependencies; just nobody has started it. Schedule() ? "
         else
           pending = []

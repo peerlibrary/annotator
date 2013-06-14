@@ -925,7 +925,7 @@ class Annotator extends Delegator
                 task.resolve()
 
           # OK, we have the info, now let's create a task from this info!
-          plugin.initTask = if @init.state() is "pending"
+          plugin.initTask = if @init.state() in ["waiting", "pending"]
             # Init is still running. Let's make a sub-task!
             taskInfo.weight ?= 1
             @init.createSubTask taskInfo
@@ -938,7 +938,7 @@ class Annotator extends Delegator
           if options?.deps? then plugin.initTask.addDeps options.deps
 
           # If the init task is already runnig, then let's reschedule it!
-          if @init.started then @tasks.schedule()
+          if @init.state() isnt "waiting" then @tasks.schedule()
 
         else
           @log.debug "Synchronously initing plugin '" + name + "'."

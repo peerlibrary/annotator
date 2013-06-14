@@ -121,7 +121,7 @@ class Annotator.Plugin.Store extends Annotator.Plugin
           @annotator.init.addSubTask task: this.startLoading "plugin init", [], false
         
           # If the init task is already runnig, then let's reschedule it!
-          if @annotator.init.started then @tasks.schedule()
+          unless @annotator.init.state() is "waiting" then @tasks.schedule()
 
         # Finish the init task 
         task.resolve()
