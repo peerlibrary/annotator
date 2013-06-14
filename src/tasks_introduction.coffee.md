@@ -20,6 +20,20 @@ A task is an individual unit of work. It typically (but not necessarily) involve
 
 Tasks support automatic dependency management and scheduling.
 
+All tasks are wrapped in a Task object, which is created by the task manager.
+
+A task is always in one of the following states:
+ * `waiting` - the task is waiting for dependencies.
+ * `pending` - the task is working
+ * `resolved` - the task has finished
+ * `rejected` - the task (or one its dependencies) has failed
+
+These states are the same as the values defined by [deferred.state()](http://api.jquery.com/deferred.state/), except the `waiting` state, which is only defined here.
+
+All task are executed (at most) once. The same task can not be started again.
+
+(If you need to do the same task more than once, you can use *task generators* for that, as described below.)
+
 ### Using the task system
 
 The task system is implemented in a single coffee file: tasks.coffee
@@ -57,7 +71,7 @@ Now let's create a task!
           console.log "Here we go!"
           task.resolve()
 
-The task we created above is the simplest task we can create. The `create` method takes a map of options; we will review the most important options shortly.
+The task we created above is about the simplest task we can create. The `create` method takes a map of options; we will review the most important options shortly.
 
 In this example, we only used the `code` key, which defines the function to run when the task is to be executed. It will receive a `task` argument, which is used to signal state changes in the task: [Resolve](http://api.jquery.com/deferred.resolve/), [reject](http://api.jquery.com/deferred.reject/), [notify](http://api.jquery.com/deferred.notify/). (It's basically a [Deferred object](http://api.jquery.com/category/deferred-object/), but some of it's methods are intercepted, so that the task manager is notified about changes, too.)
 
@@ -81,6 +95,14 @@ The output looks like this:
  * Here we go!
  * Nameless task #1: 1 - Finished in 7ms.
  *  Task A is done! 
+
+### Two different interfaces ###
+
+The object returned by the task manager's `create` method has the [Promise interface](http://api.jquery.com/promise/). It's intended usage is to observe the state of the task, use it as a dependency for other tasks, and add callbacks.
+
+The object passed to the code is a (modified) [Deferred Object](http://api.jquery.com/category/deferred-object/). It's intended usage is controlling the state of the task (by the code of the task) by calling `resolve()`, `reject()` and `notify()`.
+
+These two interfaces are similar, but not the same. The second one should probably be renamed from task to something else. (Controller?)
 
 ### Two approach to dependencies
 
