@@ -176,7 +176,7 @@ Running `schedule` more than once has no ill effects. It's supposed to run after
 
 ### Asynchronous tasks
 
-This is how to run define asynchronous tasks:
+This is how to define asynchronous tasks:
 
     case4 = ->
 
@@ -385,7 +385,7 @@ We can combine task generators and composite tasks:
 
       task_H.createSubTask
         weight: 2
-        name: "Great the President"
+        name: "Greet the President"
         code: (task) =>
           console.log "Welcome, Mr. President!"
           task.resolve()
@@ -423,9 +423,9 @@ So, what do we have here?
 Output:
 
  * Greet everybody: 0 - Starting
- * Greet everybody: 0 - Great the President: Starting
+ * Greet everybody: 0 - Greet the President: Starting
  * Welcome, Mr. President!
- * Greet everybody: 0.2 - Great the President: Finished in 1ms.
+ * Greet everybody: 0.2 - Greet the President: Finished in 1ms.
  * Greet everybody: 0.2 - fetch #1: Jill: Starting
  * Greet everybody: 0.2 - fetch #2: Jane: Starting
  * Greet everybody: 0.2 - fetch #3: Veronica: Starting
@@ -479,7 +479,7 @@ Sometimes you may want to create sub-tasks in a composite tasks so that each tas
 
       tasks.schedule()
 
-As you can see, when we create the sub-tasks (with the ganerator), we always add
+As you can see, when we create the sub-tasks (with the generator), we always add
 a dependency to the parent task's last sub-task. This means that the the tasks will be executed sequentially, and only one of them will be running at any given time. 
 
 The output will be:
