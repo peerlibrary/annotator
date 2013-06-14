@@ -16,7 +16,7 @@ The purpose of the Task system is to provice an easy way to work with asynchrono
 
 It's based on jQuery's [Deferred / Promise API](http://api.jquery.com/jQuery.Deferred/), and adds a bunch of new features.
 
-A task is an individual unit of work. It typically (but not necesseraly) involves (or depends on) some asynchronous operation.
+A task is an individual unit of work. It typically (but not necessarily) involves (or depends on) some asynchronous operation.
 
 Tasks support automatic dependency management and scheduling.
 
@@ -73,7 +73,7 @@ Creating a task does not automatically start it. (This is useful because you mig
 
       tasks.schedule()
 
-Since the task defined in our first example does not have any dependencies, it will be executed immediately. After it has finished, the callback we have registeres will be run, too.
+Since the task defined in our first example does not have any dependencies, it will be executed immediately. After it has finished, the callback we have registered will be run, too.
 
 The output looks like this:
 
