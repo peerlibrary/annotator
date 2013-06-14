@@ -67,7 +67,7 @@ class _Task
     @_deps = @_deps.filter (dep) -> dep not in toRemove
     @log.debug "Deps now:",@_deps
 
-  resolveDeps: ->
+  _resolveDeps: ->
     @_depsResolved = ((if typeof dep is "string" then @manager.lookup dep else dep) for dep in @_deps)
 
   _start: =>
@@ -239,14 +239,19 @@ class _CompositeTask extends _Task
       task: @manager.create info
 
   createDummySubTask: (info) ->
+    info.useDefaultProgress = false
     this.addSubTask
-      weight: 0
+      weight: 1
       task: @manager.createDummy info
 
 class TaskManager
   constructor: (name) ->
     @name = name
-    @log ?= getXLogger name + " TaskMan"
+    unless @log
+      if getXLogger?
+        @log = getXLogger name + " TaskMan"
+      else
+        @log = console
 #    @log.setLevel XLOG_LEVEL.DEBUG
     @defaultProgressCallbacks = []
 
@@ -313,7 +318,7 @@ class TaskManager
     for name, task of @tasks
       unless task.started
         try
-          deps = task.resolveDeps()
+          deps = task._resolveDeps()
           if deps.length is 0 and not task.started
             task._start()
           else if deps.length is 1
@@ -345,7 +350,7 @@ class TaskManager
       t = "Task '" + name + "'"
       @log.info "Analyzing waiting " + t
       try
-        deps = task.resolveDeps()
+        deps = task._resolveDeps()
         if deps.length is 0 and not task.started
           @log.info t + " has no dependencies; just nobody has started it. Schedule() ? "
         else
