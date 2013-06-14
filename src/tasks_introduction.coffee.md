@@ -36,9 +36,9 @@ Since in this demo, we would like to see what's going on with our tasks, we will
 
 ### Creating a task
 
-    case1 = ->
-
 Now let's create a task!
+
+    case1 = ->
 
       task_A = tasks.create
         code: (task) =>
@@ -72,9 +72,9 @@ The output looks like this:
 
 ### Two approach to dependencies
 
-    case2 = ->
-
 Let's define some more tasks:
+
+    case2 = ->
 
       tasks.create
         name: "task B"
@@ -102,7 +102,7 @@ A few things to notify here:
 
 A task can depend on any number of other tasks, and it's execution will only start when all the dependencies have been fulfilled.
 
-In this example, `schedule` will first run *task C* (since it does not have any dependency), and when it's ready, it will execute (in an unspecified order) *Task B* and the manually registered callback.
+In this example, `schedule` will first run *task C* (since it does not have any dependency), and when it's ready, it will execute (in an unspecified order) *Task B* and the manually registered callback. (If we cared for their order, we should add a dependency between them.)
 
 The output will look like this:
 
@@ -116,11 +116,11 @@ The output will look like this:
 
 ### Changing dependencies on the fly
 
-    case3 = ->
-
 When declaring dependencies using the `deps` option, you can specify a list. Each element can be an existing Task object, or the name of an existing Task object, or the name of a Task object to be created later.
 
 You can also add and remove dependencies after the task have been created, like this:
+
+    case3 = ->
 
       task_D = tasks.create
         name: "task D"
@@ -147,13 +147,26 @@ You can also add and remove dependencies after the task have been created, like 
 
 This will make *task D* depend on *task B*, *task E* and *task F*. Both shown methods do the same; you can add dependencies both using the task manager, and using the task objects themselves. Both can accept individual tasks, or lists of tasks. There also have `removeDeps` methods, doing what the name says.
 
+So, it this example, to output will look like this:
+ * task E: 0 - Starting
+ * E
+ * task E: 1 - Finished in 1ms.
+ * task F: 0 - Starting
+ * F
+ * task F: 1 - Finished in 0ms.
+ * task D: 0 - Starting
+ * D
+ * task D: 1 - Finished in 0ms.
+
 Please note that the changed dependencies only take effect if you `schedule` the tasks on the task manager. If a given task is already running, then changing it's dependencies won't have any effect.
+
+Running `schedule` more than once has no ill effects. It's supposed to run after every change made to tasks. (Adding new tasks or changing the dependencies.)
 
 ### Asynchronous tasks
 
-    case4 = ->
- 
 This is how to run define asynchronous tasks:
+
+    case4 = ->
 
       tasks.create
         code: (task) =>
@@ -164,16 +177,123 @@ This is how to run define asynchronous tasks:
 
       tasks.schedule()
 
-      setTimeout (-> console.log "Go! Go1"), 200
+      setTimeout (-> console.log "Go! Go!"), 200
 
 In this case, the output will look like this:
- * 
+ * Nameless task #1: 0 - Starting
+ * Here we go!
+ * Go! Go!
+ * Nameless task #1: 1 - Finished in 501ms. 
 
 ### Failing tasks
 
+Sometimes things don't work out as planned. In these cases, you can reject those tasks. This will automatically reject all other tasks depending on a given task, too.
+
+    case5 = ->
+
+      task_G = tasks.create
+        name: "task G"
+        deps: ["task H"]
+        code: (task) =>
+          console.log "G"
+          task.resolve()
+ 
+      tasks.create
+        name: "task H"
+        code: (task) =>
+          console.log "H"
+          task.reject "Oops"
+
+      task_G.done( => 
+        console.log "G done!"
+      ).fail( =>
+        console.log "G failed!"
+      )
+
+      tasks.schedule()
+
+The output will look like this:
+ * task H: 0 - Starting
+ * H
+ * task H: 1 - Failed in 2ms.
+ * task G: 1 - Skipping, because Oops
+ * G failed! 
+
 ### Composite tasks
 
-### Task generators
+Sometimes a task can be divided to smaller sub-tasks, but it's still useful the have a handle encompassing the whole process. This is what CompositeTasks are for. Example first, explanation later:
+
+    case6 = ->
+      
+      task_H = tasks.createComposite
+        name: "Big task"
+
+      task_H.createSubTask
+        name: "Small 1"
+        code: (task) =>
+          setTimeout ( => task.resolve()), 200
+
+      task_H.createSubTask
+        name: "Small 2"
+        code: (task) =>
+          setTimeout ( => task.resolve()), 100
+
+      task_H.done => console.log "All done!"      
+
+      tasks.schedule()
+
+The output will be:
+
+ * Big task: 0 - Starting
+ * Big task: 0 - Small 1: Starting
+ * Big task: 0 - Small 2: Starting
+ * Big task: 0.5 - Small 2: Finished in 101ms.
+ * Big task: 1 - Small 1: Finished in 201ms.
+ * Big task: 1 - Finished in 204ms.
+ * All done! 
+
+The rules of composite tasks are:
+ * No sub-task is started until the composite task itself has any unlresolved dependencies
+ * The sub-tasks can have dependencies over each other, or other other tasks.
+ * The composite task is finished when all sub-tasks have finished (or failed.)
+ * If any of the sub-tasks fail, the the composite task fails, too.
+ * Any `notify` calls sent by any of the sub-tasks are cascading up to the composite task. The overall progress number is calculated based on the number of sub-tasks. 
+ * You can change the weight of the sub-tasks by passing a `weight` option to the `createSubTask` call. If you don't specify any weight, it will be 1. These weights are factored into the calculation of overall progress.
+ * You can add new sub-tasks even when a composite task is already running. However, you can not add new sub-tasks after the composite task was resolved or rejected.
+ * You can `enslave` separately created tasks to a composite task by adding it as a sub-task. (In fact, sub-tasks are normal tasks, too, just automatically joined to a given composite task.) Example for this:
+
+    case7 = ->
+
+      task_I = tasks.createComposite
+        name: "Big task 2"
+
+      task_I.createSubTask
+        name: "Small 1"
+        code: (task) =>
+          setTimeout ( => task.resolve()), 100
+
+      task_I.done => console.log "All done!"      
+
+      tasks.schedule()
+
+      task_J = tasks.create   # We create a separate task
+        name: "Small 2"
+        useDefaultProgress: false 
+        # We don't want automatic reporting, since data is cascated to parent anyway
+        code: (task) =>
+          setTimeout ( => task.resolve()), 200
+
+      task_I.addSubTask       # Add this new task to task_I
+         weight: 2
+         task: task_J
+
+      tasks.schedule()
+
+
+
+
+
+### Task generators (for repeating tasks)
 
 ### Dummy tasks
 
