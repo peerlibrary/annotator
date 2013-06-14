@@ -93,7 +93,7 @@ class Annotator.Plugin.Store extends Annotator.Plugin
     @initTaskInfo =
       code: (task) =>
         unless Annotator.supported()
-          task.failed "Annotator is not supported."
+          task.reject "Annotator is not supported."
 
         @tasks = @annotator.tasks
         @log = @annotator.log
@@ -124,7 +124,7 @@ class Annotator.Plugin.Store extends Annotator.Plugin
           if @annotator.init.started then @tasks.schedule()
 
         # Finish the init task 
-        task.ready()
+        task.resolve()
 
   # Public: Initialises the plugin and loads the latest annotations. If the
   # Auth plugin is also present it will request an auth token before loading
@@ -324,7 +324,7 @@ class Annotator.Plugin.Store extends Annotator.Plugin
       unless @pendingRequests
         [task, @pendingLoading] = [@pendingLoading, null]
         # Signal that the task has finished.
-        task.ready()
+        task.resolve()
 
   # Public: Performs the same task as Store.#loadAnnotations() but calls the
   # 'search' URI with an optional query string.
@@ -552,4 +552,4 @@ class Annotator.Plugin.Store extends Annotator.Plugin
     if @pendingLoading?.state() is "pending"
       [task, @pendingLoading] = [@pendingLoading, null]        
       # We must signal that the task has failed.
-      task.failed "Coult not load annotations: API request failed."
+      task.reject "Coult not load annotations: API request failed."

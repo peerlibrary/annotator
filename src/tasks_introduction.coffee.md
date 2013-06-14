@@ -8,7 +8,7 @@ This file is written in [Literate CoffeeScript](http://ashkenas.com/literate-cof
 
 The recommended way to read it is to view it at GitHub, so that the markup is rendered properly. (And after [this](https://github.com/github/markup/pull/192) will be merged, there will also be syntax highlighting for the code parts.)
 
-To actually see the results of the code bellow, open **task_demo.html** in the root directory of this project.
+To actually see the results of the code bellow, open **task_intro.html** in the root directory of this project.
 
 ### What is a task?
 
@@ -43,13 +43,15 @@ Now let's create a task!
       task_A = tasks.create
         code: (task) =>
           console.log "Here we go!"
-          task.ready()
+          task.resolve()
 
-The task we created above is the simplest task we can create. The `create` method takes a map of options; we will review the most important options shortly. In this example, we only used the `code` key, which defines the function to run when the task is to be executed. It will receive a `task` argument, which is used to signal state changes in the task. (Completion, failure, progress info.) It's similar to jQuery's Deferred object, but it's methods are intercepted, so that the task manager is notified about changes, too.
+The task we created above is the simplest task we can create. The `create` method takes a map of options; we will review the most important options shortly.
+
+In this example, we only used the `code` key, which defines the function to run when the task is to be executed. It will receive a `task` argument, which is used to signal state changes in the task: [Resolve](http://api.jquery.com/deferred.resolve/), [reject](http://api.jquery.com/deferred.reject/), [notify](http://api.jquery.com/deferred.notify/). (It's basically a [Deferred object](http://api.jquery.com/category/deferred-object/), but it's methods are intercepted, so that the task manager is notified about changes, too.)
 
 In this example, we simply signal that the task is ready.
 
-The object returned by the `create` method is basically a [jQuery deferred promise](http://api.jquery.com/deferred.promise/), so you can register callbacks [the usual way](http://api.jquery.com/deferred.done/):
+The object returned by the `create` method is basically a [jQuery Deferred Promise](http://api.jquery.com/deferred.promise/), so you can register callbacks [the usual way](http://api.jquery.com/deferred.done/):
 
       task_A.done -> console.log "Task A is done!"
 
@@ -72,13 +74,13 @@ Let's define some more tasks:
         deps: ["task C"]
         code: (task) =>
           console.log "B"
-          task.ready()
+          task.resolve()
  
       task_C = tasks.create
         name: "task C"
         code: (task) =>
           console.log "C"
-          task.ready()
+          task.resolve()
 
       task_C.done -> console.log "Task C is done!"
 
@@ -93,7 +95,7 @@ A few things to notify here:
 
 In this example, `schedule` will first run *task C* (since it does not have any dependency), and when it's ready, it will execute (in an unspecified order) *Task B* and the manually registered callback.
 
-### More about dependencies on the fly
+### Changing dependencies on the fly
 
     case3 = ->
 
@@ -105,28 +107,30 @@ You can also add and remove dependencies after the task have been created, like 
         name: "task D"
         code: (task) =>
           console.log "D"
-          task.ready()
+          task.resolve()
 
       tasks.create
         name: "task E"
         code: (task) =>
           console.log "E"
-          task.ready()
+          task.resolve()
 
       tasks.create
         name: "task F"
         code: (task) =>
           console.log "F"
-          task.ready()
+          task.resolve()
 
-      tasks.addDeps "task D", "task E"
-      task_D.addDeps "task F"
+      tasks.addDeps "task D", "task E"   # task D depends on task E
+      task_D.addDeps "task F"            # task D depends on task F
 
       tasks.schedule()
 
 This will make *task D* depend on *task B*, *task E* and *task F*. Both shown methods do the same; you can add dependencies both using the task manager, and using the task objects themselves. Both can accept individual tasks, or lists of tasks. There also have `removeDeps` methods, doing what the name says.
 
 Please note that the changed dependencies only take effect if you `schedule` the tasks on the task manager. If a given task is already running, then changing it's dependencies won't have any effect.
+
+### Failing tasks
 
 ### Composite tasks
 

@@ -123,7 +123,7 @@ class Annotator.Plugin.Auth extends Annotator.Plugin
       code: (task) =>
         if @options.token
           this.setToken(@options.token)
-          task.ready
+          task.resolve()
         else
           this.requestToken()
 
@@ -153,7 +153,7 @@ class Annotator.Plugin.Auth extends Annotator.Plugin
     .done (data, status, xhr) =>
       this.setToken(data)
       if @initTask?.state() is "pending"
-        @initTask.dfd.ready @_unsafeToken
+        @initTask.dfd.resolve @_unsafeToken
 
     # on failure, relay any message given by the server to the user with a notification
     .fail (xhr, status, err) =>
@@ -161,7 +161,7 @@ class Annotator.Plugin.Auth extends Annotator.Plugin
       @annotator.log.error "#{msg} #{err}", xhr
       Annotator.showNotification("#{msg} #{xhr.responseText}", Annotator.Notification.ERROR)
       if @initTask?.state() is "pending"
-        @initTask.dfd.failed msg + xhr.responseText
+        @initTask.dfd.reject msg + xhr.responseText
 
     # always reset the requestInProgress indicator
     .always =>

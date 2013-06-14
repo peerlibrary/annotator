@@ -26,14 +26,8 @@ class _Task
     @dfd._notify = @dfd.notify
     @dfd.notify = (data) => @dfd._notify $.extend data, task: this
 
-    # Rename resolve to _resolve, so that nobody calls it by accident.
     @dfd._resolve = @dfd.resolve
-    @dfd.resolve = -> throw new Error "Use ready() instead of resolve()!"
-
-    @dfd._reject = @dfd.reject
-    @dfd.reject = -> throw new Error "Use failed() instead of reject()!"
-
-    @dfd.ready = (data) =>
+    @dfd.resolve = (data) =>
       unless @dfd.state() is "pending"
         throw new Error "Called ready() on a task in state '" + @dfd.state() + "'!"
       endTime = new Date().getTime()
@@ -43,7 +37,8 @@ class _Task
         text: "Finished in " + elapsedTime + "ms."
       @dfd._resolve data
 
-    @dfd.failed = (data) =>
+    @dfd._reject = @dfd.reject
+    @dfd.reject = (data) =>
       unless @dfd.state() is "pending"
         throw new Error "Called failed() on a task in state '" + @dfd.state() + "'!"
       endTime = new Date().getTime()
@@ -99,7 +94,7 @@ class _Task
       catch exception
         @log.error "Error while executing task '" + @_name + "': " + exception
         @log.error exception
-        @dfd.failed "Exception: " + exception.message
+        @dfd.reject "Exception: " + exception.message
 
   _skip: (reason) =>
     if @started then return
@@ -160,9 +155,9 @@ class _CompositeTask extends _Task
 
   _finished: ->
     if @failedSubTasks
-      @dfd.failed @failReasons
+      @dfd.reject @failReasons
     else
-      @dfd.ready()
+      @dfd.resolve()
 
   _deleteSubTask: (taskID) ->
     delete @subTasks[taskID]
@@ -279,7 +274,7 @@ class TaskManager
     task
 
   createDummy: (info, useDefaultProgress = true) ->
-    info.code = (task) -> task.ready()
+    info.code = (task) -> task.resolve()
     this.create info, useDefaultProgress  
 
   createGenerator: (info) ->

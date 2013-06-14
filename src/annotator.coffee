@@ -132,7 +132,7 @@ class Annotator extends Delegator
         for n in data.annotations
           this.setupAnnotation(n)
 
-        task.ready()
+        task.resolve()
 
     unless @options.noInit
       if @options.asyncInit
@@ -178,20 +178,20 @@ class Annotator extends Delegator
       name: "dynamic CSS styles"
       code: (task) =>
         this._setupDynamicStyle()
-        task.ready()
+        task.resolve()
 
     @init.createSubTask
       name: "wrapper"
       code: (task) =>
         this._setupWrapper()
-        task.ready()
+        task.resolve()
 
     @init.createSubTask
       name: "adder"
       deps: ["wrapper"] # Adder is attached to the end of the wrapper
       code: (task) =>
         this.adder = $(this.html.adder).appendTo(@wrapper).hide()
-        task.ready()        
+        task.resolve()        
 
     @init.createSubTask
       name: "viewer & editor"
@@ -200,14 +200,14 @@ class Annotator extends Delegator
       deps: ["wrapper"]
       code: (task) =>
         this._setupViewer()._setupEditor()
-        task.ready()
+        task.resolve()
 
     @_scanGen = @tasks.createGenerator
       name: "scan document"
       code: (task) =>
         s = this._scanAsync()
         s.progress task.notify
-        s.done task.ready        
+        s.done task.resolve
 
     if @options.noScan
       # We were instructed to skip initial DOM scan        
@@ -227,7 +227,7 @@ class Annotator extends Delegator
       code: (task) =>
         # Enable annotating
         this._setupDocumentEvents() unless @options.readOnly
-        task.ready()
+        task.resolve()
 
   defaultNotify: (info) =>
     info ?= { }
@@ -922,7 +922,7 @@ class Annotator extends Delegator
               code: (task) =>
                 plugin.asyncMode = true
                 plugin.pluginInit()
-                task.ready()
+                task.resolve()
 
           # OK, we have the info, now let's create a task from this info!
           plugin.initTask = if @init.state() is "pending"
