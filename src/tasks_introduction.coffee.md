@@ -260,9 +260,11 @@ The rules of composite tasks are:
  * Any `notify` calls sent by any of the sub-tasks are cascading up to the composite task. The overall progress number is calculated based on the number of sub-tasks. 
  * You can change the weight of the sub-tasks by passing a `weight` option to the `createSubTask` call. If you don't specify any weight, it will be 1. These weights are factored into the calculation of overall progress.
  * You can add new sub-tasks even when a composite task is already running. However, you can not add new sub-tasks after the composite task was resolved or rejected.
- * You can `enslave` separately created tasks to a composite task by adding it as a sub-task. (In fact, sub-tasks are normal tasks, too, just automatically joined to a given composite task.) Example for this:
+ * You can `enslave` separately created tasks to a composite task by adding it as a sub-task. (In fact, sub-tasks are normal tasks, too, just automatically joined to a given composite task.)
 
-    case7 = ->
+Example for this:
+
+    case8 = ->
 
       task_I = tasks.createComposite
         name: "Big task 2"
