@@ -264,7 +264,7 @@ The rules of composite tasks are:
 
 Example for this:
 
-    case8 = ->
+    case7 = ->
 
       task_I = tasks.createComposite
         name: "Big task 2"
