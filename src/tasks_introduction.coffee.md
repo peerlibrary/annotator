@@ -26,21 +26,24 @@ To do anything with tasks, first you need a task manager:
 
     tasks = new TaskManager()
 
-Usually you only need one task manager in a given application.
+Usually you only need one task manager in a given application, but to avoid mixing the different test cases, we will use several.
 
-Since in this demo, we would like to see what's going on with our tasks, we register a generic progress notifier function on our task manager, which will be automatically attached to all the created tasks:
+Since in this demo, we would like to see what's going on with our tasks, we will register a generic progress notifier function on our task managers, which will be automatically attached to all the created tasks:
 
     tasks.addDefaultProgress (info) =>
-      console.log info.task._name + ": " + info.progress + " - " + info.text
+      console.log info.task._name + ": " + 
+        info.progress + " - " + info.text
 
 ### Creating a task
 
+    case1 = ->
+
 Now let's create a task!
 
-    task_A = tasks.create
-      code: (task) =>
-        console.log "Here we go!"
-        task.ready()
+      task_A = tasks.create
+        code: (task) =>
+          console.log "Here we go!"
+          task.ready()
 
 The task we created above is the simplest task we can create. The `create` method takes a map of options; we will review the most important options shortly. In this example, we only used the `code` key, which defines the function to run when the task is to be executed. It will receive a `task` argument, which is used to signal state changes in the task. (Completion, failure, progress info.) It's similar to jQuery's Deferred object, but it's methods are intercepted, so that the task manager is notified about changes, too.
 
@@ -48,40 +51,87 @@ In this example, we simply signal that the task is ready.
 
 The object returned by the `create` method is basically a [jQuery deferred promise](http://api.jquery.com/deferred.promise/), so you can register callbacks [the usual way](http://api.jquery.com/deferred.done/):
 
-    task_A.done -> console.log "Task A is done!"
+      task_A.done -> console.log "Task A is done!"
 
 ### Executing a task
 
 Creating a task does not automatically start it. (This is useful because you might want to mess with the dependencies after you have created the task, but before you execute it.) So to start available task, we must tell the task manager to "schedule" all defined tasks.
 
-    tasks.schedule()
+      tasks.schedule()
 
 Since the task defined in our first example does not have any dependencies, it will be executed immediately. After it has finished, the callback we have registeres will be run, too.
 
 ### Two approach to dependencies
 
+    case2 = ->
+
 Let's define some more tasks:
 
-    tasks.create
-      name: "task B"
-      deps: ["task C"]
-      code: (task) =>
-        console.log "B"
-        task.ready()
+      tasks.create
+        name: "task B"
+        deps: ["task C"]
+        code: (task) =>
+          console.log "B"
+          task.ready()
  
-    task_C = tasks.create
-      name: "task C"
-      code: (task) =>
-        console.log "C"
-        task.ready()
+      task_C = tasks.create
+        name: "task C"
+        code: (task) =>
+          console.log "C"
+          task.ready()
 
-    task_C.done -> console.log "Task C is done!"
+      task_C.done -> console.log "Task C is done!"
 
-    tasks.schedule()
+      tasks.schedule()
 
 A few things to notify here:
  * We have added names to our tasks, using the `name` option. (Useful understanding debug output, and also for declaring dependencies.)
  * We have introduced two dependencies:
    * We have manually registered a callback on *task C*.
-   * We have added a declarative dependency (with the `deps` option) to *task B*: *task B* won't be run until *task C* is finished.
+   * We have added a declarative dependency (with the `deps` option) to *task B*, so that *task B* won't be run until *task C* is finished.
+   The second way of defining dependencies is more flexible; see bellow.
 
+In this example, `schedule` will first run *task C* (since it does not have any dependency), and when it's ready, it will execute (in an unspecified order) *Task B* and the manually registered callback.
+
+### More about dependencies on the fly
+
+    case3 = ->
+
+When declaring dependencies using the `deps` option, you can specify a list. Each element can be an existing Task object, or the name of an existing Task object, or the name of a Task object to be created later.
+
+You can also add and remove dependencies after the task have been created, like this:
+
+      task_D = tasks.create
+        name: "task D"
+        code: (task) =>
+          console.log "D"
+          task.ready()
+
+      tasks.create
+        name: "task E"
+        code: (task) =>
+          console.log "E"
+          task.ready()
+
+      tasks.create
+        name: "task F"
+        code: (task) =>
+          console.log "F"
+          task.ready()
+
+      tasks.addDeps "task D", "task E"
+      task_D.addDeps "task F"
+
+      tasks.schedule()
+
+This will make *task D* depend on *task B*, *task E* and *task F*. Both shown methods do the same; you can add dependencies both using the task manager, and using the task objects themselves. Both can accept individual tasks, or lists of tasks. There also have `removeDeps` methods, doing what the name says.
+
+Please note that the changed dependencies only take effect if you `schedule` the tasks on the task manager. If a given task is already running, then changing it's dependencies won't have any effect.
+
+### Composite tasks
+
+### Task generators
+
+### Dummy tasks
+
+### Other tricks
