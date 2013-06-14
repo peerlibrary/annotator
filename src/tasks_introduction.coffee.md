@@ -12,7 +12,7 @@ To actually see the results of the code below, open **task_intro.html** in the r
 
 ### What is a task?
 
-The purpose of the Task system is to provice an easy way to work with asynchronous, inter-dependent tasks.
+The purpose of the Task system is to provide an easy way to work with asynchronous, inter-dependent tasks.
 
 It's based on jQuery's [Deferred / Promise API](http://api.jquery.com/jQuery.Deferred/), and adds a bunch of new features.
 
@@ -265,7 +265,7 @@ The output will be:
  * All done! 
 
 The rules of composite tasks are:
- * No sub-task is started until the composite task itself has any unlresolved dependencies
+ * No sub-task is started until the composite task itself has any unresolved dependencies
  * The sub-tasks can have dependencies over each other, or other other tasks.
  * The composite task is finished when all sub-tasks have finished (or failed.)
  * If any of the sub-tasks fail, the the composite task fails, too.
