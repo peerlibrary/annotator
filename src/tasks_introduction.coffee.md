@@ -67,17 +67,20 @@ Now let's create a task!
     case1 = ->
 
       task_A = tasks.create
-        code: (task) =>
+        code: (taskCtrl) =>
           console.log "Here we go!"
-          task.resolve()
+          taskCtrl.resolve()
 
 The task we created above is about the simplest task we can create. The `create` method takes a map of options; we will review the most important options shortly.
 
-In this example, we only used the `code` key, which defines the function to run when the task is to be executed. It will receive a `task` argument, which is used to signal state changes in the task: [Resolve](http://api.jquery.com/deferred.resolve/), [reject](http://api.jquery.com/deferred.reject/), [notify](http://api.jquery.com/deferred.notify/). (It's basically a [Deferred object](http://api.jquery.com/category/deferred-object/), but some of it's methods are intercepted, so that the task manager is notified about changes, too.)
+In this example, we only used the `code` option, which defines the function to run when the task is to be executed. It will receive a `taskCtrl` argument, which is a (tweaked) [jQuery Deferred Object](http://api.jquery.com/category/deferred-object/). It should be used by the code of the task to signal the chenges in the state of the task, using the [resolve()](http://api.jquery.com/deferred.resolve/), [reject()](http://api.jquery.com/deferred.reject/) and [notify()](http://api.jquery.com/deferred.notify/) methods.
 
-In this example, we simply signal that the task is ready.
+In this example, we simply signal that the task is resolved.
 
-The object returned by the `create` method is basically a [jQuery Deferred Promise](http://api.jquery.com/deferred.promise/), so you can register callbacks [the usual way](http://api.jquery.com/deferred.done/):
+The object returned by the task manager's `create` method has the [jQuery Deferred Promise API](http://api.jquery.com/deferred.promise/). You can use it
+ * as a dependency for other tasks
+ * to observe the state of the task - `state()` method)
+ * to register callbacks [the](http://api.jquery.com/deferred.done/) [usual](http://api.jquery.com/deferred.fail/) [way](http://api.jquery.com/deferred.progress/):
 
       task_A.done -> console.log "Task A is done!"
 
@@ -96,14 +99,6 @@ The output looks like this:
  * Nameless task #1: 1 - Finished in 7ms.
  *  Task A is done! 
 
-### Two different interfaces ###
-
-The object returned by the task manager's `create` method has the [Promise interface](http://api.jquery.com/promise/). It's intended usage is to observe the state of the task, use it as a dependency for other tasks, and add callbacks.
-
-The object passed to the code is a (modified) [Deferred Object](http://api.jquery.com/category/deferred-object/). It's intended usage is controlling the state of the task (by the code of the task) by calling `resolve()`, `reject()` and `notify()`.
-
-These two interfaces are similar, but not the same. The second one should probably be renamed from task to something else. (Controller?)
-
 ### Two approach to dependencies
 
 Let's define some more tasks:
@@ -113,15 +108,15 @@ Let's define some more tasks:
       tasks.create
         name: "task B"
         deps: ["task C"]
-        code: (task) =>
+        code: (taskCtrl) =>
           console.log "B"
-          task.resolve()
+          taskCtrl.resolve()
  
       task_C = tasks.create
         name: "task C"
-        code: (task) =>
+        code: (taskCtrl) =>
           console.log "C"
-          task.resolve()
+          taskCtrl.resolve()
 
       task_C.done -> console.log "Task C is done!"
 
@@ -158,21 +153,21 @@ You can also add and remove dependencies after the task have been created, like 
 
       task_D = tasks.create
         name: "task D"
-        code: (task) =>
+        code: (taskCtrl) =>
           console.log "D"
-          task.resolve()
+          taskCtrl.resolve()
 
       tasks.create
         name: "task E"
-        code: (task) =>
+        code: (taskCtrl) =>
           console.log "E"
-          task.resolve()
+          taskCtrl.resolve()
 
       tasks.create
         name: "task F"
-        code: (task) =>
+        code: (taskCtrl) =>
           console.log "F"
-          task.resolve()
+          taskCtrl.resolve()
 
       tasks.addDeps "task D", "task E"   # task D depends on task E
       task_D.addDeps "task F"            # task D depends on task F
@@ -203,10 +198,10 @@ This is how to define asynchronous tasks:
     case4 = ->
 
       tasks.create
-        code: (task) =>
+        code: (taskCtrl) =>
           console.log "Here we go!"
           setTimeout (=>
-            task.resolve()
+            taskCtrl.resolve()
           ), 500
 
       tasks.schedule()
@@ -228,15 +223,15 @@ Sometimes things don't work out as planned. In these cases, you can reject those
       task_G = tasks.create
         name: "task G"
         deps: ["task H"]
-        code: (task) =>
+        code: (taskCtrl) =>
           console.log "G"
-          task.resolve()
+          taskCtrl.resolve()
  
       tasks.create
         name: "task H"
-        code: (task) =>
+        code: (taskCtrl) =>
           console.log "H"
-          task.reject "Oops"
+          taskCtrl.reject "Oops"
 
       task_G.done( => 
         console.log "G done!"
@@ -264,13 +259,13 @@ Sometimes a task can be divided to smaller sub-tasks, but it's still useful the 
 
       task_H.createSubTask
         name: "Small 1"
-        code: (task) =>
-          setTimeout ( => task.resolve()), 200
+        code: (taskCtrl) =>
+          setTimeout ( => taskCtrl.resolve()), 200
 
       task_H.createSubTask
         name: "Small 2"
-        code: (task) =>
-          setTimeout ( => task.resolve()), 100
+        code: (taskCtrl) =>
+          setTimeout ( => taskCtrl.resolve()), 100
 
       task_H.done => console.log "All done!"      
 
@@ -305,8 +300,8 @@ Example for this:
 
       task_I.createSubTask
         name: "Small 1"
-        code: (task) =>
-          setTimeout ( => task.resolve()), 100
+        code: (taskCtrl) =>
+          setTimeout ( => taskCtrl.resolve()), 100
 
       task_I.done => console.log "All done!"      
 
@@ -317,8 +312,8 @@ Example for this:
         # We don't want automatic reporting, since data is 
         # cascaded to the parent task anyway
         useDefaultProgress: false 
-        code: (task) =>
-          setTimeout ( => task.resolve()), 200
+        code: (taskCtrl) =>
+          setTimeout ( => taskCtrl.resolve()), 200
 
       task_I.addSubTask       # Add this new task to task_I
          weight: 2
@@ -348,10 +343,10 @@ Example first, explanation later:
 
       greeterGen = tasks.createGenerator
         name: "greeting"
-        code: (task, data) =>
+        code: (taskCtrl, data) =>
           setTimeout ( =>
             console.log "Hi there, " + data.name + "!"
-            task.resolve()
+            taskCtrl.resolve()
           ), Math.random() * 1000
 
       for chick in ["Jill", "Jane", "Veronica", "Clare", "Angel"]
@@ -390,17 +385,17 @@ We can combine task generators and composite tasks:
 
       fetchGen = tasks.createGenerator
         name: "fetch"
-        code: (task, data) =>
+        code: (taskCtrl, data) =>
           setTimeout ( =>
             console.log data.name + " has arrived."
-            task.resolve()
+            taskCtrl.resolve()
           ), Math.random() * 1000
 
       greeterGen = tasks.createGenerator
         name: "greeting"
-        code: (task, data) =>
+        code: (taskCtrl, data) =>
           console.log "Hi there, " + data.name + "!"
-          task.resolve()
+          taskCtrl.resolve()
 
       task_H = tasks.createComposite
         name: "Greet everybody"
@@ -408,9 +403,9 @@ We can combine task generators and composite tasks:
       task_H.createSubTask
         weight: 2
         name: "Greet the President"
-        code: (task) =>
+        code: (taskCtrl) =>
           console.log "Welcome, Mr. President!"
-          task.resolve()
+          taskCtrl.resolve()
 
       for chick in ["Jill", "Jane", "Veronica", "Clare"]
         fetch = fetchGen.create
@@ -481,9 +476,9 @@ Sometimes you may want to create sub-tasks in a composite tasks so that each tas
 
       dance = tasks.createGenerator
         name: "dance"
-        code: (task, data) =>
+        code: (taskCtrl, data) =>
           console.log "Dancing with " + data.name + "..."
-          task.resolve()
+          taskCtrl.resolve()
 
       task_K = tasks.createComposite
         name: "Party"
