@@ -39,7 +39,7 @@ All task are executed (at most) once. The same task can not be started again.
 The task system is implemented in a single coffee file: tasks.coffee
 
 Dependencies:
- * jQuery.
+ * jQuery
  * the xlog library from dom-text-mapper can be used, but that's not required.
 
 There are no other dependencies.
@@ -57,8 +57,7 @@ Usually you only need one task manager in a given application, but to avoid mixi
 Since in this demo, we would like to see what's going on with our tasks, we will register a generic progress notifier function on our task managers, which will be automatically attached to all the created tasks:
 
     tasks.addDefaultProgress (info) =>
-      console.log info.task._name + ": " + 
-        info.progress + " - " + info.text
+      console.log info.task._name + ": " + info.progress + " - " + info.text
 
 ### Creating a task
 
@@ -73,13 +72,13 @@ Now let's create a task!
 
 The task we created above is about the simplest task we can create. The `create` method takes a map of options; we will review the most important options shortly.
 
-In this example, we only used the `code` option, which defines the function to run when the task is to be executed. It will receive a `taskCtrl` argument, which is a (tweaked) [jQuery Deferred Object](http://api.jquery.com/category/deferred-object/). It should be used by the code of the task to signal the chenges in the state of the task, using the [resolve()](http://api.jquery.com/deferred.resolve/), [reject()](http://api.jquery.com/deferred.reject/) and [notify()](http://api.jquery.com/deferred.notify/) methods.
+In this example, we only used the `code` option, which defines the function to run when the task is to be executed. It will receive a `taskCtrl` argument, which is a (tweaked) [jQuery Deferred Object](http://api.jquery.com/category/deferred-object/). It should be used by the code of the task to signal the changes in the state of the task, using the [resolve()](http://api.jquery.com/deferred.resolve/), [reject()](http://api.jquery.com/deferred.reject/) and [notify()](http://api.jquery.com/deferred.notify/) methods.
 
 In this example, we simply signal that the task is resolved.
 
 The object returned by the task manager's `create` method has the [jQuery Deferred Promise API](http://api.jquery.com/deferred.promise/). You can use it
  * as a dependency for other tasks
- * to observe the state of the task - `state()` method)
+ * to observe the state of the task - `state()` method
  * to register callbacks [the](http://api.jquery.com/deferred.done/) [usual](http://api.jquery.com/deferred.fail/) [way](http://api.jquery.com/deferred.progress/):
 
       task_A.done -> console.log "Task A is done!"
