@@ -11,12 +11,12 @@ However, when working with longer documents, this init process might take too lo
 
 Therefore, we have introduced the feature of asynchronous initialization.
 
-However, we can't just break the previously existing API of Annotator (by returning a half-initializet instance from the constructor), so this feature is optional; Annotator can still be used exacly the way it was used before. For an example about the traditional usage, see [demo.html](../demo.html#L88) and [dev.html](../dev.html#L130).
+However, we can't just break the previously existing API of Annotator (by returning a half-initializet instance from the constructor), so this feature is optional; Annotator can still be used exacly the way it was used before. For an example about the traditional usage, see [demo.html](../demo.html#L88) and [dev.html](../dev.html#L103).
 
 #### Usage and API
 
 The constructor of Annotator takes an argument called `options`. The following keys of this map are relevant:
- * asyncInit: if set to true, will use the asynchronous init process. (Default is false.) When using this, the created instance is not necesseraly ready to be used upon the constructor's return. You can access the promise in the 'init' field. For an example of using Annotator this way, see [dev_async.html](../dev_async.html).
+ * asyncInit: if set to true, will use the asynchronous init process. (Default is false.) When using this, the created instance is not necesseraly ready to be used upon the constructor's return. You can access the promise in the 'init' field. For an example of using Annotator this way, see [dev_async.html](../dev_async.html#L103).
  * noInit: don't run any init process. If this param is passed, the instance is no initiated at all by the constructor. It's up the the user to call either initSync() or initAsync() later on.
  * noScan: while initializing, skip scanning the document. (This works with both the sync and the async init process.) This scan is required for creating or re-attaching annotations, but there are situations which can benefit from postpoing this process to some other time.
 
