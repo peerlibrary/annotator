@@ -11,7 +11,7 @@ However, when working with longer documents, this init process might take too lo
 
 Therefore, we have introduced the feature of asynchronous initialization.
 
-However, we can't just break the previously existing API of Annotator (by returning a half-initializet instance from the constructor), so this feature is optional; Annotator can still be used exacly the way it was used before. For an example about the traditional usage, see [demo.html](../demo.html) and [dev_sync.html](../dev_sync.html).
+However, we can't just break the previously existing API of Annotator (by returning a half-initializet instance from the constructor), so this feature is optional; Annotator can still be used exacly the way it was used before. For an example about the traditional usage, see [demo.html](../demo.html#L88) and [dev.html](../dev.html#L130).
 
 #### Usage and API
 
