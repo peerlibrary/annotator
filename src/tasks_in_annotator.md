@@ -67,7 +67,29 @@ So, we handle the following cases:
 
 #### Auth plugin
 
+The async init task does this:
+ * If a token was specified in the options, the task is resolved immediately.
+ * Otherwise, a token request is sent out. The task is resolved/rejected according to the results of this request.
+
+The name of this task is *"auth token"*.
+
+Any operation that depends a valid auth token is supposed to depend on this task.
+
+Earlier, there was a method to register callbacks to be called then the token becomes available: the `withToken()` method. This method of control is now redundant, and when running Annotator in async mode, it conflicts with the task system (because it meddles with the request), so using the withToken() method in asynchronous mode is now forbidden. (It will throw an exception.) Just depend on the "auth token" task.
+
+#### Permissions plugin
+
+The permissions plugin can use the auth token, but can be used independently, too. If you want to use it independently, specify the `ignoreToken` option for this plugin. If you don't do this, then a dependency to "auth token" is automatically added to the dependencies of this plugin. 
+
+This changes earlier behaviour, because until now, whether or not the permission plugin uses the auth plugin was decided by the order of the loading of these plugins. Now the order does not count, since the init tasks are scheduled automatically, independently of the loading order. Therefore, you can now control this optional dependency by this new parameter on the permission plugin.
+
 #### Store plugin
+
+Since the loading of the annotations is a repeating task (for example, see login/logout), the async init task for the store plugin sets up a task generator for this, and then immediately creates a new task for the initial loading of annotations. (Except when the `noLoading` option is set, which means that no initial loading is required.) If this happens during init, then This initial loading task is inserted to the Annotator's init task, too.
+
+Later, you can trigger a new loading using the `startLoading` method of the plugin. This method also accepts an optional list of extra URIs to look up for cross-document annotations. The method results the new loading task (created by the loading task generator), so you can use it as a promise.
+
+#### About scanning, again
 
 #### Anchoring annotations
 
