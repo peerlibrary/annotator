@@ -558,6 +558,8 @@ That is a tricky question. There is no easy answer, but the guidelines are the f
  * When executing several tasks in a line, the system always introduces some small pauses, so that the browser does not block, and it can render the DOM, etc.
  * If finishing a task triggers the execution of more than one other tasks, there is no guarantee of their order of execution. It's also possible that some of them will be postponed. (This area of the code might change in the future, so I am hesitant to specify this any more now.)
 
-
 ### Other tricks
 
+#### Overriding tasks
+
+You can override a task by defining a new task with the same name. In this case, the code will be replaced with the new one. (The exact rules for this will be explained here later.)
