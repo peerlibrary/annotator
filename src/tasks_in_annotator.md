@@ -1,6 +1,6 @@
 ## Using tasks in Annotator
 
-The document at [tasks_introduction.coffee.md] describes the features and usage of the task system. In this document, I will describe how this is used in Annotator
+The document at [tasks_introduction.coffee.md](../tasks_introduction.coffee.md) describes the features and usage of the task system. In this document, I will describe how this is used in Annotator
 
 ### Constructor and initialization
 
