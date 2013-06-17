@@ -65,7 +65,6 @@ class Annotator extends Delegator
 
   viewerHideTimer: null
 
-12345678901234567890123456789012345678901234567890123456789012345678901234567890
   # Public: Creates an instance of the Annotator. Requires a DOM Element in
   # which to watch for annotations as well as any options.
   #
@@ -84,8 +83,9 @@ class Annotator extends Delegator
   #    noInit: don't run any init process. If this param is set to true, the
   #            instance is no initiated at all by constructor. It's up the the
   #            user to call either initSync() or initAsync() later on.
-  #    noScan: while initializing, skip scanning the document. This scan is
-  #            required for creating or re-attaching annotations, but there are
+  #    noScan: while initializing, skip scanning the document. (This works with
+  #            both the sync and the async init process.) This scan is required
+  #            for creating or re-attaching annotations, but there are
   #            situations which can benefit from postpoing this process to some
   #            other time.
   #    readOnly: disables the creation of new annotations.

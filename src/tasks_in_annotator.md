@@ -34,8 +34,15 @@ The point of putting the definition of the tasks into a separate method (`define
 So, here are the defined tasks:
 
  * "Booting Annotator" is a composite tasks, consisting of the following sub-tasks:
-   * "dynamic CSS styles" - 
+   * "dynamic CSS styles" - Sets up any dynamically calculated CSS for the Annotator.
+   * "wrapper" - Wraps the children of the selecte delement in a wrapper div, and remove any script elements inside these elements to prevent them re-executing.
+   * "adder" - Add the adder button
+   * "viewer & editor" - Creates an instance of `Annotator.Viewer` and of `Annotator.Editor`, and append them to the wrapper.
+   * "scan document" - Traverse and scan the document, preparing the data structures required for reattaching annotations.
+   * "document events" - Sets up the selection event listeners used for annotating
+   Most of these functions have received their separate tasks, because they involve some kind of DOM operation which can be slow for bigger document, and therefore it's useful to break them up to smaller chunks, so that the browser can stay (relatively) responsive while there are working.
 
+The dependencies between these events are explained in comments, see the code.
 
 ### Loading/initializing plugins
 
