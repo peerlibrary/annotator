@@ -91,17 +91,17 @@ class Annotator.Plugin.Store extends Annotator.Plugin
     @annotations = []
 
     @initTaskInfo =
-      code: (task) =>
+      code: (taskCtrl) =>
         unless Annotator.supported()
-          task.reject "Annotator is not supported."
+          taskCtrl.reject "Annotator is not supported."
 
         @tasks = @annotator.tasks
         @log = @annotator.log
         @loadGen = @tasks.createGenerator
           name: "load annotations"
-          code: (task, data) =>
+          code: (taskCtrl, data) =>
             extraURIs = data.extraURIs
-            this.pendingLoading = task
+            this.pendingLoading = taskCtrl
             this.pendingRequests = 1 + extraURIs.length
 
             @log.info "Sending request for " + @options.annotationData.uri
@@ -124,7 +124,7 @@ class Annotator.Plugin.Store extends Annotator.Plugin
           unless @annotator.init.state() is "waiting" then @tasks.schedule()
 
         # Finish the init task 
-        task.resolve()
+        taskCtrl.resolve()
 
   # Public: Initialises the plugin and loads the latest annotations. If the
   # Auth plugin is also present it will request an auth token before loading
@@ -323,9 +323,9 @@ class Annotator.Plugin.Store extends Annotator.Plugin
       # Decrease the number of pending requests
       @pendingRequests -= 1
       unless @pendingRequests
-        [task, @pendingLoading] = [@pendingLoading, null]
+        [taskCtrl, @pendingLoading] = [@pendingLoading, null]
         # Signal that the task has finished.
-        task.resolve()
+        taskCtrl.resolve()
 
   # Public: Performs the same task as Store.#loadAnnotations() but calls the
   # 'search' URI with an optional query string.

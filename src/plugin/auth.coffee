@@ -120,11 +120,12 @@ class Annotator.Plugin.Auth extends Annotator.Plugin
     # This is the information used to construct the plugin init task in async mode.
     @initTaskInfo =
       name: "auth token"
-      code: (task) =>
+      code: (taskCtrl) =>
         if @options.token
           this.setToken(@options.token)
-          task.resolve()
+          taskCtrl.resolve()
         else
+          @pendingLoad = taskCtrl
           this.requestToken()
 
   initPlugin: ->
@@ -152,16 +153,18 @@ class Annotator.Plugin.Auth extends Annotator.Plugin
     # on success, set the auth token
     .done (data, status, xhr) =>
       this.setToken(data)
-      if @initTask?.state() is "pending"
-        @initTask.dfd.resolve @_unsafeToken
+      if @pendingLoad?.state() is "pending"
+        [taskCtrl, @pendingLoad] = [@pendingLoad, null]        
+        taskCtrl.resolve @_unsafeToken
 
     # on failure, relay any message given by the server to the user with a notification
     .fail (xhr, status, err) =>
       msg = Annotator._t("Couldn't get auth token:")
       @annotator.log.error "#{msg} #{err}", xhr
       Annotator.showNotification("#{msg} #{xhr.responseText}", Annotator.Notification.ERROR)
-      if @initTask?.state() is "pending"
-        @initTask.dfd.reject msg + xhr.responseText
+      if @pendingLoad?.state() is "pending"
+        [taskCtrl, @pendingLoad] = [@pendingLoad, null]                
+        taskCtrl.reject msg + xhr.responseText
 
     # always reset the requestInProgress indicator
     .always =>

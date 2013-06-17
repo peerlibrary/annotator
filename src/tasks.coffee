@@ -21,35 +21,35 @@ class _Task
     info.deps ?= []
     this.setDeps info.deps
     @_started = false
-    @dfd = new jQuery.Deferred()
+    @_ctrl = new jQuery.Deferred()
 
-    @dfd._notify = @dfd.notify
-    @dfd.notify = (data) => @dfd._notify $.extend data, task: this
+    @_ctrl._notify = @_ctrl.notify
+    @_ctrl.notify = (data) => @_ctrl._notify $.extend data, task: this
 
-    @dfd._resolve = @dfd.resolve
-    @dfd.resolve = (data) =>
-      unless @dfd.state() is "pending"
-        throw new Error "Called ready() on a task in state '" + @dfd.state() + "'!"
+    @_ctrl._resolve = @_ctrl.resolve
+    @_ctrl.resolve = (data) =>
+      unless @_ctrl.state() is "pending"
+        throw new Error "Called ready() on a task in state '" + @_ctrl.state() + "'!"
       endTime = new Date().getTime()
-      elapsedTime = endTime - @dfd.startTime
-      @dfd.notify
+      elapsedTime = endTime - @_ctrl.startTime
+      @_ctrl.notify
         progress: 1
         text: "Finished in " + elapsedTime + "ms."
-      @dfd._resolve data
+      @_ctrl._resolve data
 
-    @dfd._reject = @dfd.reject
-    @dfd.reject = (data) =>
-      unless @dfd.state() is "pending"
-        throw new Error "Called failed() on a task in state '" + @dfd.state() + "'!"
+    @_ctrl._reject = @_ctrl.reject
+    @_ctrl.reject = (data) =>
+      unless @_ctrl.state() is "pending"
+        throw new Error "Called failed() on a task in state '" + @_ctrl.state() + "'!"
       endTime = new Date().getTime()
-      elapsedTime = endTime - @dfd.startTime
-      @dfd.notify
+      elapsedTime = endTime - @_ctrl.startTime
+      @_ctrl.notify
         progress: 1
         text: "Failed in " + elapsedTime + "ms."
-      @dfd._reject data
+      @_ctrl._reject data
 
 
-    @dfd.promise this
+    @_ctrl.promise this
 
     # We will override the state() function, to report the new "waiting" state
     @_state = @state
@@ -93,25 +93,25 @@ class _Task
 
     @_started = true
     setTimeout =>
-      @dfd.notify
+      @_ctrl.notify
         progress: 0
         text: "Starting"
-      @dfd.startTime = new Date().getTime()
+      @_ctrl.startTime = new Date().getTime()
       try
-        @_todo @dfd, @_data
+        @_todo @_ctrl, @_data
       catch exception
         @log.error "Error while executing task '" + @_name + "': " + exception
         @log.error exception
-        @dfd.reject "Exception: " + exception.message
+        @_ctrl.reject "Exception: " + exception.message
 
   _skip: (reason) =>
     if @state() isnt "waiting" then return
     @_started = true
     reason = "Skipping, because " + reason
-    @dfd.notify
+    @_ctrl.notify
       progress: 1
       text: reason
-    @dfd._reject @_name + " was skipped, because " + reason
+    @_ctrl._reject @_name + " was skipped, because " + reason
 
 class _TaskGen
   constructor: (info) ->
@@ -147,7 +147,7 @@ class _CompositeTask extends _Task
     # sub-tasks depend on. So, in effect, running the task
     # allows to sub-tasks (that don't have other dependencies)
     # to execute.
-    info.code = => @trigger.dfd._resolve()
+    info.code = => @trigger._ctrl._resolve()
  
     super info
     @subTasks = {}
@@ -157,23 +157,23 @@ class _CompositeTask extends _Task
     @trigger = this.createSubTask
       weight: 0
       name: info.name + "__init"
-      code: (task) ->
+      code: ->
         # A trigget does not need to do anything.
         # Resolving the trigger task will trigger the rest of the tasks.
     @lastSubTask = @trigger
 
   _finished: ->
     if @failedSubTasks
-      @dfd.reject @failReasons
+      @_ctrl.reject @failReasons
     else
-      @dfd.resolve()
+      @_ctrl.resolve()
 
   _deleteSubTask: (taskID) ->
     delete @subTasks[taskID]
     @pendingSubTasks -= 1
 
   addSubTask: (info) ->
-    unless @dfd.state() is "pending"
+    unless @_ctrl.state() is "pending"
       throw new Error "Can not add subTask to a finished task!"
     weight = info.weight ? 1
     task = info.task
@@ -220,7 +220,7 @@ class _CompositeTask extends _Task
       if info.text?
         report.text = task._name + ": " + info.text
 
-      @dfd.notify report
+      @_ctrl.notify report
 
     @lastSubTask = task
 
@@ -291,7 +291,7 @@ class TaskManager
     task
 
   createDummy: (info) ->
-    info.code = (task) -> task.resolve()
+    info.code = (taskCtrl) -> taskCtrl.resolve()
     this.create info
 
   createGenerator: (info) ->

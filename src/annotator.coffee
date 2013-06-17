@@ -128,11 +128,11 @@ class Annotator extends Delegator
 
     @loadBatchTaskGen = @tasks.createGenerator
       name: "anchoring annotation batch"
-      code: (task, data) =>
+      code: (taskCtrl, data) =>
         for n in data.annotations
           this.setupAnnotation(n)
 
-        task.resolve()
+        taskCtrl.resolve()
 
     unless @options.noInit
       if @options.asyncInit
@@ -176,38 +176,38 @@ class Annotator extends Delegator
 
     @init.createSubTask
       name: "dynamic CSS styles"
-      code: (task) =>
+      code: (taskCtrl) =>
         this._setupDynamicStyle()
-        task.resolve()
+        taskCtrl.resolve()
 
     @init.createSubTask
       name: "wrapper"
-      code: (task) =>
+      code: (taskCtrl) =>
         this._setupWrapper()
-        task.resolve()
+        taskCtrl.resolve()
 
     @init.createSubTask
       name: "adder"
       deps: ["wrapper"] # Adder is attached to the end of the wrapper
-      code: (task) =>
+      code: (taskCtrl) =>
         this.adder = $(this.html.adder).appendTo(@wrapper).hide()
-        task.resolve()        
+        taskCtrl.resolve()        
 
     @init.createSubTask
       name: "viewer & editor"
       # Not sure why, but if we setup the editor without the wrapper,
       # it will not show.
       deps: ["wrapper"]
-      code: (task) =>
+      code: (taskCtrl) =>
         this._setupViewer()._setupEditor()
-        task.resolve()
+        taskCtrl.resolve()
 
     @_scanGen = @tasks.createGenerator
       name: "scan document"
-      code: (task) =>
+      code: (taskCtrl) =>
         s = this._scanAsync()
-        s.progress task.notify
-        s.done task.resolve
+        s.progress taskCtrl.notify
+        s.done taskCtrl.resolve
 
     if @options.noScan
       # We were instructed to skip initial DOM scan        
@@ -223,10 +223,10 @@ class Annotator extends Delegator
       name: "document events"
       # We want to listen to events only when everything is ready 
       deps: ["wrapper", "viewer & editor", scan, "dynamic CSS styles", "adder"]
-      code: (task) =>
+      code: (taskCtrl) =>
         # Enable annotating
         this._setupDocumentEvents() unless @options.readOnly
-        task.resolve()
+        taskCtrl.resolve()
 
   defaultNotify: (info) =>
     info ?= { }
@@ -919,10 +919,10 @@ class Annotator extends Delegator
             taskInfo =
               name: "plugin " + name
               deps: plugin.deps
-              code: (task) =>
+              code: (taskCtrl) =>
                 plugin.asyncMode = true
                 plugin.pluginInit()
-                task.resolve()
+                taskCtrl.resolve()
 
           # OK, we have the info, now let's create a task from this info!
           plugin.initTask = if @init.state() in ["waiting", "pending"]
