@@ -65,6 +65,7 @@ class Annotator extends Delegator
 
   viewerHideTimer: null
 
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
   # Public: Creates an instance of the Annotator. Requires a DOM Element in
   # which to watch for annotations as well as any options.
   #
@@ -76,14 +77,17 @@ class Annotator extends Delegator
   #
   # element - A DOM Element in which to annotate.
   # options - An options Object.
-  #    asyncInit: if set to true, will use the asynchronous init process. (Default is false.)
-  #               When using this, the created instance is not necesseraly ready to be used
-  #               upon the consturctor's return. You can access the promise in the 'init' field.
-  #    noInit: don't run any init process. If this param is passed, the instance is no initiated
-  #            at all. It's up the the user to call either initSync() or initAsync() later on.
-  #    noScan: while initializing, skip scanning the document. This scan is required for creating
-  #            or re-attaching annotations, but there are situations which can benefit from
-  #            postpoing this process to some other time.
+  #    asyncInit: if set to true, will use the asynchronous init process.
+  #            (Default is false.) When using this, the created instance is not
+  #            necesseraly ready to be used upon the constructor's return.
+  #            You can access the the init task (promise) in the 'init' field.
+  #    noInit: don't run any init process. If this param is set to true, the
+  #            instance is no initiated at all by constructor. It's up the the
+  #            user to call either initSync() or initAsync() later on.
+  #    noScan: while initializing, skip scanning the document. This scan is
+  #            required for creating or re-attaching annotations, but there are
+  #            situations which can benefit from postpoing this process to some
+  #            other time.
   #    readOnly: disables the creation of new annotations.
   #
   # Examples
