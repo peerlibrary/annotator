@@ -87,11 +87,48 @@ This changes earlier behaviour, because until now, whether or not the permission
 
 Since the loading of the annotations is a repeating task (for example, see login/logout), the async init task for the store plugin sets up a task generator for this, and then immediately creates a new task for the initial loading of annotations. (Except when the `noLoading` option is set, which means that no initial loading is required.) If this happens during init, then This initial loading task is inserted to the Annotator's init task, too.
 
-Later, you can trigger a new loading using the `startLoading` method of the plugin. This method also accepts an optional list of extra URIs to look up for cross-document annotations. The method results the new loading task (created by the loading task generator), so you can use it as a promise.
+Later, you can trigger a new loading using the `startLoading` method of the plugin. This method also accepts an optional list of extra URIs to look up for cross-document annotations. The method returns the new loading task (created by the loading task generator), so you can use it as a promise.
 
 #### About scanning, again
 
+To be able to create annotations, or to re-attach old ones, the dom-text-mapper library needs to have some data about document. The process where this data is collected is called *scanning*.
+
+Usually, the DOM is scanned when initializing Annotator.
+
+Scanning can be done synchronously (=blocking) and asynchronously (=non-blocking).
+(The dom-text-mapper library supports both ways of operations.) 
+
+During Annotator's init process,
+ * if running in sync mode, a sync scan is launched.
+ * if running in async more, an async scan is launched (as a task).
+ * if the `noScan` option is set, no scan is launched.
+
+If you need to manually launch a new scan later, you can do this
+ * by calling the `_scanSync()` method (which does a blocking, sync scan)
+ * by calling the `_scanAsync()` method (which does an unblocking, async scan, returning a promise)
+ * by creating (and scheduling) a task using the task generator saved in the `_scanGen` field. (This is the recommended way to do it, because this way, you can easily add dependencies for this step, which is often useful during initializing the system.
+
+The dom-text-mapper library needs to keep it's data structures current. It does not ([yet](https://github.com/hypothesis/dom-text-mapper/issues/3)) auto-detect changes in the DOM; for now, anybody who changes something in the DOM is supposed to call `DomTextMapper.changed()`, with the changed node. This will make all instances of d-t-m (containing the given node) to perform an incremental update of the DOM mapping data. Currently, this is done in a synchronous (=blocking) mode, but since local changes tend to be small, hopefully this won't cause too much waiting for the user.
+
 #### Anchoring annotations
 
-#### ...
+Anchoring annotations is a repeating task, so we have a generator for it.
+Furthermore, it is done in batches (of 10); so actually, we have two kind of related tasks, and thus two generators:
+ * one for the individual batches of annotations (stored in the field `loadBatchTaskGen`), and
+ * one for the composite tasks, containing all the batch tasks as sub-tasks.
 
+This is how the flow control of anchoring goes:
+ * Annotator's `loadAnnotations()` is called by the Store plugin, delivering a list of annotations that it has loaded. (This may happen repeatedly, if the Store plugin was instructed to load annotations from several different sources, or for several different documents at once.)
+ * `loadAnnotations()` checks whether there is an active load task. If there is none, it creates one (using the generator), and stores it in the field `pendingLoading`.
+ * The newly received list of annotations is sliced to batches of 10, and for all batches, a new batch task is created (using the generator), for dealing with this batch of annotations. These batch tasks are added to the composite tasks as a sub-task. 
+ * When all new tasks are prepared, they are scheduled.
+ * As the batch tasks are executed, they call `setupAnnotation()` for each annotations.
+
+#### Future directions
+
+I have ported to tasks only the parts which were needed to make Hypothes.is work in async mode.
+There are probably several more internal operations could be ported to promises / tasks.
+
+(For example, setupAnnotation could return a task, which could be announced in the relevant events, etc.)
+
+Please feel free to suggest / implement improvements.
