@@ -79,16 +79,17 @@ class _Task
     @_depsResolved = ((if typeof dep is "string" then @manager.lookup dep else dep) for dep in @_deps)
 
   _start: =>
+    if @_overridden then return
     if @state() isnt "waiting" then return
 
     unless @_depsResolved?
       throw Error "Dependencies are not resolved for task '"+ @_name +"'!"
     for dep in @_depsResolved
       unless dep.state() is "resolved"
-        @log.debug "What am I doing here? Out of the " +
-          @_depsResolved.length + " dependencies, '" + dep._name +
-          "' for the current task '" + @_name +
-          "' has not yet been resolved!"
+#        @log.debug "What am I doing here? Out of the " +
+#          @_depsResolved.length + " dependencies, '" + dep._name +
+#          "' for the current task '" + @_name +
+#          "' has not yet been resolved!"
         return
 
     @_started = true
@@ -277,6 +278,7 @@ class TaskManager
     if @tasks[name]?
       @log.debug "Overriding existing task '" + name +
         "' with new definition!"
+      @tasks[name]._overridden = true
     name
 
   create: (info) ->
