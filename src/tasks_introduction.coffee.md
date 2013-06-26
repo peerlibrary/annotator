@@ -799,7 +799,7 @@ Definition with promises:
 
       jQuery.when(step_1(), step_2()).then => console.log "Big task done!"
    
-OK, now let's add a new assume we need to insert a new element to this existing group dependency!
+OK, now let's insert a new element to this existing group dependency!
 
 With tasks:
 
