@@ -563,3 +563,207 @@ That is a tricky question. There is no easy answer, but the guidelines are the f
 #### Overriding tasks
 
 You can override a task by defining a new task with the same name. In this case, the code will be replaced with the new one. (The exact rules for this will be explained here later.)
+
+### Tasks vs Promises
+
+As explained in the opening section, tasks are based on Deferred Promises. After covering what the tasks do, the question naturally arises, could not we do the same with tasks? The answer is that in sames cases, we could (albeit with more difficulty), but sometimes we could not.
+
+Let's see some examples!
+
+#### The basic use-case
+
+Let's see a very simple use-case, and analyze the differences!
+Let's define 3 steps that must be executed in a fixed order,
+
+
+With tasks:
+
+    case13 = ->
+
+      tasks.create			# Boilerplate 1
+        name: "task L"			# Boilerplate 2
+        code: (taskCtrl) =>		# Boilerplate 3
+          setTimeout =>	 		# For fake async demo only
+            console.log "L"		# Actually useful code 1
+            # Do something here		# Actually useful code 2
+            taskCtrl.resolve()		# Boilerplate 8
+
+      tasks.create			# Boilerplate 5
+        name: "task M"			# Boilerplate 6
+        deps: ["task L"]		# Configuration 1
+        code: (taskCtrl) =>		# Boilerplate 7
+          setTimeout =>	 		# For fake async demo only
+            console.log "M"		# Actually useful code 3
+            # Do something here		# Actually useful code 4
+            taskCtrl.resolve()		# Boilerplate 8
+
+      tasks.create			# Boilerplate 9
+        name: "task N"			# Boilerplate 10
+        deps: ["task M"]		# Configuration 2
+        code: (taskCtrl) =>		# Boilerplate 11
+          setTimeout =>	 		# For fake async demo only
+            console.log "M"		# Actually useful code 5
+            # Do something here		# Actually useful code 6
+            taskCtrl.resolve()		# Boilerplate 12
+
+      tasks.schedule()
+
+Definition With promises:
+
+    case14 = ->
+
+      feature_a = ->			# Boilerplate 1
+        d = new jQuery.Deferred()	# Boilerplate 2
+        setTimeout =>			# For fake async demo only  
+          console.log "A"		# Actually useful code 1
+          # Do something here		# Actually useful code 2	
+          d.resolve()			# Boilerplate 3
+        d.promise()			# Boilerplate 4
+
+      feature_b = ->			# Boilerplate 5
+        d = new jQuery.Deferred()	# Boilerplate 6
+        setTimeout =>			# For fake async demo only
+           console.log "B"		# Actually useful code 3
+           # Do something here		# Actually useful code 4
+           d.resolve()	 		# Boilerplate 7
+        d.promise()			# Boilerplate 8
+
+      feature_c = ->			# Boilerplate 9
+        d = new jQuery.Deferred()	# Boilerplate 10
+        setTimeout =>			# For fake async demo only
+           console.log "C"		# Actually useful code 5
+           # Do something here		# Actually useful code 6
+           d.resolve()	 		# Boilerplate 11
+        d.promise()			# Boilerplate 12
+
+      feature_a().then(feature_b).then(feature_c)  # Configuration 1
+
+
+Let's compare what we had to do, and what we got!
+
+To wrap the same 6 lines of useful code, we had to to write:
+ * Boiler-plate code: 
+   * tasks: 13 lines
+   * promises: 12 lines
+ * configuration:
+   * tasks: 2 lines (distributed to each task)
+   * promises: 1 line (centralized)
+
+The amount of needed boilerplate code is nearly identical. (Tasks require one more line total.)
+
+What we got:
+ * The desired workloads are executed in the wanted order?
+   * Yes, in both versions
+ * Between the execution of the three pieces of workloads, is the the control returned to the browser, so that it can handle the incoming events and stays responsive?
+   * With tasks: yes, this is done automatically
+   * With promises: only if you manually introduce timeouts
+ * What kind of logging and monitoring do we have for debugging:
+   * Tasks: the output will be like this:
+     * task L: 0 - Starting 
+     * L
+     * task L: 1 - Finished in 2ms.
+     * task M: 0 - Starting
+     * M
+     * task M: 1 - Finished in 2ms.
+     * task N: 0 - Starting
+     * M
+     * task N: 1 - Finished in 5ms.
+   * Promises: you only get what you have manually added. In our case:
+     * A
+     * B
+     * C
+
+So, with tasks we got some small benefits, but actually, it's no big deal, we could live without those benefits.
+
+The real fun begins when we want to change or extend our already existing code. 
+
+#### Change a task
+
+Let's suppose that we need to override one of the tasks!
+Furthermore, assume that we would prefer to do this without having to actually modify the original code. (Defined in case13)
+
+Overriding the definition of a task:
+
+    case15 = ->
+      case13()    # We can simply add the original definitions
+      # And override what we want
+      tasks.create
+        name: "task M"			# Boilerplate 6
+        deps: ["task L"]
+        code: (taskCtrl) =>
+          setTimeout =>
+            console.log "M override"
+            # Do something here
+            taskCtrl.resolve()
+
+      tasks.schedule() # And re-schedule everything
+
+
+With promises:
+
+The thing is, working with the original code (defined in case 14), there is no straightforward way to do this. You could, for example, move out the pieces of code that actually do the work into separate functions, so that they can be overridden by later code, but this involves modifying the original code (not always feasible or desirable), or if is done indiscriminately, when writing the original code, this would involve adding lots of useless boilerplate code. With tasks, no further boilerplate code is necessary, since tasks manager already supports overriding the tasks.
+
+#### Adding a new action
+
+Let's suppose that you want to trigger a new action when an existing task has finished. (Again, preferably without touching the original code in case13)
+
+Introducing a new task:
+
+    case16 = ->
+      case13()
+
+      tasks.create
+        name: "task O"
+        deps: ["task L"]
+        code: (taskCtrl) =>
+          setTimeout =>
+            console.log "O"
+            # Do something here
+            taskCtrl.resolve()
+
+      tasks.schedule()
+
+With promises:
+
+The thing is, if you don't have a handle to the promise (for example, feature_a in our example), you can't easily do this. To attach a new trigger, you need to be able to get a reference to the handle of the original promise. So, you either have to put it into the global name-space, or channel it to the new code using some other method. With tasks, this is not required, since the name is tasks can be resolved inside the task manager.
+
+#### Adding a new dependency to an existing task
+
+OK, now let's suppose that you want to insert some new action into an already defined chain of events in case13!
+
+This how we do this:
+
+    case17 = ->
+      case13()
+
+      tasks.create
+        name: "task P"
+        deps: ["task L"]
+        code: (taskCtrl) =>
+          setTimeout =>
+            console.log "P"
+            # Do something here
+            taskCtrl.resolve()
+ 
+      tasks.addDeps "task M", "task P"
+      tasks.schedule()
+
+With promises:
+
+Again, you can not do this without modifying the original code.
+Once you have registered the callback with the `then()` method of the promise, there is no way to make it wait for a new dependency which you want to add later. The only things you can do is to
+ * Modify the original code, and add a hook for what you want
+ * Override the entire method where the action was defined, and copy all the code, except the part when the sequence of events was defined.
+
+#### Other tricks
+
+With tasks, you can also
+ * remove dependencies between previously defined tasks
+ * add new dependencies between previously defined tasks
+ * easily override previously defined tasks
+... etc.
+
+This flexibility is one of the main benefit (and purpose) of the Tasks. When adding new pieces of code to a task-using project, this makes it remarkably easy to insert and mix-and-match tasks any way you might want, including ways not foreseen when designing the old tasks.
+
+The convenience features (like the sub-tasks with aggregating statistics) are just an added bonus.
+
