@@ -566,9 +566,7 @@ You can override a task by defining a new task with the same name. In this case,
 
 ### Tasks vs Promises
 
-As explained in the opening section, tasks are based on Deferred Promises. After covering what the tasks do, the question naturally arises, could not we do the same with tasks? The answer is that in sames cases, we could (albeit with more difficulty), but sometimes we could not.
-
-Let's see some examples!
+As explained in the opening section, tasks are based on Deferred Promises. After covering what the tasks do, the question naturally arises, could not we do the same with promises? The answer is that in sames cases, we could (albeit with more difficulty), but sometimes we could not.
 
 #### The basic use-case
 
@@ -608,7 +606,7 @@ With tasks:
 
       tasks.schedule()
 
-Definition With promises:
+Definition with promises:
 
     case14 = ->
 
@@ -679,8 +677,7 @@ The real fun begins when we want to change or extend our already existing code.
 
 #### Change a task
 
-Let's suppose that we need to override one of the tasks!
-Furthermore, assume that we would prefer to do this without having to actually modify the original code. (Defined in case13)
+Let's suppose that we need to override one of the tasks, and we would prefer to do this without having to modify the original code. (Defined in case13.)
 
 Overriding the definition of a task:
 
@@ -701,7 +698,7 @@ Overriding the definition of a task:
 
 With promises:
 
-The thing is, working with the original code (defined in case 14), there is no straightforward way to do this. You could, for example, move out the pieces of code that actually do the work into separate functions, so that they can be overridden by later code, but this involves modifying the original code (not always feasible or desirable), or if is done indiscriminately, when writing the original code, this would involve adding lots of useless boilerplate code. With tasks, no further boilerplate code is necessary, since tasks manager already supports overriding the tasks.
+The thing is, working with the original code (defined in case 14), there is no straightforward way to do this. You could, for example, move out the pieces of code that actually do the work into separate functions, so that they can be overridden by later code, but this involves modifying the original code (not always feasible or desirable), or if is done indiscriminately, when writing the original code, this would involve adding lots of useless boilerplate code. With tasks, no further boilerplate code is necessary, since task manager already supports overriding the tasks.
 
 #### Adding a new action
 
@@ -725,7 +722,7 @@ Introducing a new task:
 
 With promises:
 
-The thing is, if you don't have a handle to the promise (for example, feature_a in our example), you can't easily do this. To attach a new trigger, you need to be able to get a reference to the handle of the original promise. So, you either have to put it into the global name-space, or channel it to the new code using some other method. With tasks, this is not required, since the name is tasks can be resolved inside the task manager.
+The thing is, if you don't have a handle to the promise (for example, feature_a in our example), you can't easily do this. To attach a new trigger, you need to be able to get a reference to the handle of the original promise. So, you either have to put it into the global name-space, or channel it to the new code using some other method. With tasks, this is not required, since the name of the tasks can be resolved inside the task manager.
 
 #### Adding a new dependency to an existing task
 
@@ -753,7 +750,73 @@ With promises:
 Again, you can not do this without modifying the original code.
 Once you have registered the callback with the `then()` method of the promise, there is no way to make it wait for a new dependency which you want to add later. The only things you can do is to
  * Modify the original code, and add a hook for what you want
- * Override the entire method where the action was defined, and copy all the code, except the part when the sequence of events was defined.
+ * Override the entire method where the action was defined, and copy all the code, except the part where the sequence of events was defined.
+
+#### Group dependencies
+
+The situation is similar here.
+Definition is very similar.
+
+Definition with tasks:
+
+    case18 = ->
+      g = tasks.createComposite name: "big task"
+      g.createSubTask
+        name: "step 1"
+        code: (taskCtrl) ->
+          setTimeout =>
+            console.log "Step 1"
+            taskCtrl.resolve()
+
+      g.createSubTask
+        name: "step 2"
+        code: (taskCtrl) ->
+          setTimeout =>
+            console.log "Step 2"
+            taskCtrl.resolve()
+
+      g.done => console.log "Big task done!"
+
+      tasks.schedule()
+
+Definition with promises:
+
+    case19 = ->
+
+      step_1 = ->
+        d = new jQuery.Deferred()
+        setTimeout =>
+          console.log "Step 1"
+          d.resolve()
+        d.promise()
+
+      step_2 = ->
+        d = new jQuery.Deferred()
+        setTimeout =>
+          console.log "Step 1"
+          d.resolve()
+        d.promise()
+
+      jQuery.when(step_1(), step_2()).then => console.log "Big task done!"
+   
+OK, now let's add a new assume we need to insert a new element to this existing group dependency!
+
+With tasks:
+
+    case20 = ->
+      case18()
+      tasks.lookup("big task").createSubTask
+        name: "step 3"
+        code: (taskCtrl) ->
+          setTimeout =>
+            console.log "Step 3"
+            taskCtrl.resolve()
+
+      tasks.schedule()
+
+With promises:
+
+There is no way to do this; the callback registered with the `jQuery.when()` method will be called, whatever you do. To override this, you need to change the original code.
 
 #### Other tricks
 
