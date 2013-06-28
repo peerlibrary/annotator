@@ -101,7 +101,7 @@ class Annotator extends Delegator
     this._setupDynamicStyle()
 
     # Perform initial DOM scan, unless told not to.
-    this._scan() unless (@options.noScan or @options.noMatching)
+    this._scanSync() unless (@options.noScan or @options.noMatching)
 
     # Create adder
     this.adder = $(this.html.adder).appendTo(@wrapper).hide()
@@ -116,8 +116,8 @@ class Annotator extends Delegator
     this
 
   # Perform a scan of the DOM. Required for finding anchors.
-  _scan: ->
-    @domMatcher.scan()   
+  _scanSync: ->
+    @domMatcher.scanSync()   
  
   # Wraps the children of @element in a @wrapper div. NOTE: This method will also
   # remove any script elements inside @element to prevent them re-executing.
