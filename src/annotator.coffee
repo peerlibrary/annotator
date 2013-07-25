@@ -4,6 +4,35 @@
 # I've removed any support for IE TextRange (see commit d7085bf2 for code)
 # for the moment, having no means of testing it.
 
+util =
+  uuid: (-> counter = 0; -> counter++)()
+
+  getGlobal: -> (-> this)()
+
+  # Return the maximum z-index of any element in $elements (a jQuery collection).
+  maxZIndex: ($elements) ->
+    all = for el in $elements
+            if $(el).css('position') == 'static'
+              -1
+            else
+              parseInt($(el).css('z-index'), 10) or -1
+    Math.max.apply(Math, all)
+
+  mousePosition: (e, offsetEl) ->
+    offset = $(offsetEl).position()
+    {
+      top:  e.pageY - offset.top,
+      left: e.pageX - offset.left
+    }
+
+  # Checks to see if an event parameter is provided and contains the prevent
+  # default method. If it does it calls it.
+  #
+  # This is useful for methods that can be optionally used as callbacks
+  # where the existance of the parameter must be checked before calling.
+  preventEventDefault: (event) ->
+    event?.preventDefault?()
+
 # Store a reference to the current Annotator object.
 _Annotator = this.Annotator
 
@@ -76,8 +105,6 @@ class Annotator extends Delegator
 
     # Create adder
     this.adder = $(this.html.adder).appendTo(@wrapper).hide()
-
-    Annotator._instances.push(this)
 
   # Initializes the components used for analyzing the DOM
   _setupMatching: ->
@@ -175,7 +202,7 @@ class Annotator extends Delegator
     sel = '*' + (":not(.annotator-#{x})" for x in ['adder', 'outer', 'notice', 'filter']).join('')
 
     # use the maximum z-index in the page
-    max = Util.maxZIndex($(document.body).find(sel))
+    max = util.maxZIndex($(document.body).find(sel))
 
     # but don't go smaller than 1010, because this isn't bulletproof --
     # dynamic elements in the page (notifications, dialogs, etc.) may well
@@ -193,38 +220,6 @@ class Annotator extends Delegator
 
     this
 
-  # Public: Destroy the current Annotator instance, unbinding all events and
-  # disposing of all relevant elements.
-  #
-  # Returns nothing.
-  destroy: ->
-    $(document).unbind({
-      "mouseup":   this.checkForEndSelection
-      "mousedown": this.checkForStartSelection
-    })
-
-    $('#annotator-dynamic-style').remove()
-
-    @adder.remove()
-    @viewer.destroy()
-    @editor.destroy()
-
-    @wrapper.find('.annotator-hl').each ->
-      $(this).contents().insertBefore(this)
-      $(this).remove()
-
-    @wrapper.contents().insertBefore(@wrapper)
-    @wrapper.remove()
-    @element.data('annotator', null)
-
-    for name, plugin of @plugins
-      @plugins[name].destroy()
-
-    this.removeEvents()
-    idx = Annotator._instances.indexOf(this)
-    if idx != -1
-      Annotator._instances.splice(idx, 1)
-
   getHref: =>
     uri = decodeURIComponent document.location.href
     if document.location.hash then uri = uri.slice 0, (-1 * location.hash.length)
@@ -232,23 +227,14 @@ class Annotator extends Delegator
     $('link[rel^="canonical"]').each -> uri = decodeURIComponent this.href
     return uri
 
-  # Create a RangeSelector from a NormalizedRange
   getRangeSelector: (range) ->
     sr = range.serialize @wrapper[0]
     selector =
       type: "RangeSelector"
-      startContainer: sr.start
+      startContainer: sr.startContainer
       startOffset: sr.startOffset
-      endContainer: sr.end
+      endContainer: sr.endContainer
       endOffset: sr.endOffset
-
-  # Create a SerializedRange from a RangeSelector
-  getSerializedRange: (selector) ->
-    return new Range.SerializedRange
-      start: selector.startContainer
-      startOffset: selector.startOffset
-      end: selector.endContainer
-      endOffset: selector.endOffset        
 
   getTextQuoteSelector: (range) ->
     unless range?
@@ -302,7 +288,7 @@ class Annotator extends Delegator
   #
   # Returns Array of NormalizedRange instances.
   getSelectedRanges: ->
-    selection = Util.getGlobal().getSelection()
+    selection = util.getGlobal().getSelection()
 
     ranges = []
     rangesToIgnore = []
@@ -380,7 +366,7 @@ class Annotator extends Delegator
     unless selector? then return null
 
     # Try to apply the saved XPath
-    normalizedRange = this.getSerializedRange(selector).normalize @wrapper[0]
+    normalizedRange = Range.sniff(selector).normalize @wrapper[0]
     # Look up the saved quote
     savedQuote = this.getQuoteForTarget target
     if savedQuote?
@@ -397,7 +383,7 @@ class Annotator extends Delegator
           Current quote is '#{currentQuote}'.)"
         return null
       else
-        console.log "Saved quote matches."
+#        console.log "Saved quote matches."
     else
       console.log "No saved quote, nothing to compare. Assume that it's OK."
     range: normalizedRange
@@ -419,7 +405,7 @@ class Annotator extends Delegator
           Current quote is '#{currentQuote}'.)"
         return null
       else
-        console.log "Saved quote matches."
+#        console.log "Saved quote matches."
     else
       console.log "No saved quote, nothing to compare. Assume that it's okay."
 
@@ -527,8 +513,8 @@ class Annotator extends Delegator
   findAnchor: (target) ->
     unless target?
       throw new Error "Trying to find anchor for null target!"
-    console.log "Trying to find anchor for target: "
-    console.log target
+#    console.log "Trying to find anchor for target: "
+#    console.log target
 
     strategies = [
       # Simple strategy based on DOM Range
@@ -883,12 +869,12 @@ class Annotator extends Delegator
     for range in @selectedRanges
       container = range.commonAncestor
       if $(container).hasClass('annotator-hl')
-        container = $(container).parents('[class!=annotator-hl]')[0]
+        container = $(container).parents(':not([class^=annotator-hl])')[0]
       return if this.isAnnotator(container)
 
     if event and @selectedRanges.length
       @adder
-        .css(Util.mousePosition(event, @wrapper[0]))
+        .css(util.mousePosition(event, @wrapper[0]))
         .show()
     else
       @adder.hide()
@@ -929,7 +915,7 @@ class Annotator extends Delegator
       .andSelf()
       .map -> return $(this).data("annotation")
 
-    this.showViewer($.makeArray(annotations), Util.mousePosition(event, @wrapper[0]))
+    this.showViewer($.makeArray(annotations), util.mousePosition(event, @wrapper[0]))
 
   # Annotator#element callback. Sets @ignoreMouseup to true to prevent
   # the annotation selection events firing when the adder is clicked.
@@ -1035,11 +1021,8 @@ class Annotator.Plugin extends Delegator
 
   pluginInit: ->
 
-  destroy: ->
-    this.removeEvents()
-
 # Sniff the browser environment and attempt to add missing functionality.
-g = Util.getGlobal()
+g = util.getGlobal()
 
 if not g.document?.evaluate?
   $.getScript('http://assets.annotateit.org/vendor/xpath.min.js')
@@ -1074,9 +1057,6 @@ Annotator.Delegator = Delegator
 Annotator.Range = Range
 Annotator.Util = Util
 
-# Expose a global instance registry
-Annotator._instances = []
-
 # Bind gettext helper so plugins can use localisation.
 Annotator._t = _t
 
@@ -1086,7 +1066,7 @@ Annotator.supported = -> (-> !!this.getSelection)()
 # Restores the Annotator property on the global object to it's
 # previous value and returns the Annotator.
 Annotator.noConflict = ->
-  Util.getGlobal().Annotator = _Annotator
+  util.getGlobal().Annotator = _Annotator
   this
 
 # Create global access for Annotator
