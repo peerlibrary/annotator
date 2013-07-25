@@ -15,8 +15,14 @@ Range = {}
 Range.sniff = (r) ->
   if r.commonAncestorContainer?
     new Range.BrowserRange(r)
-  else if typeof r.start is "string"
+  else if typeof r.startContainer is "string"
     new Range.SerializedRange(r)
+  else if typeof r.start is "string"
+    new Range.SerializedRange
+      startContainer: r.start
+      startOffset: r.startOffset
+      endContainer: r.end
+      endOffset: r.endOffset
   else if r.start and typeof r.start is "object"
     new Range.NormalizedRange(r)
   else
