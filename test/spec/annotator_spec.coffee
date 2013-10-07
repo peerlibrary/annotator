@@ -904,7 +904,7 @@ describe 'Annotator', ->
       sinon.spy(annotator, 'setupAnnotation')
       sinon.stub(annotator, 'deleteAnnotation')
       sinon.stub(annotator, 'showEditor')
-      sinon.stub(annotator, 'findAnchor').returns(anchor: anchor)
+      sinon.stub(annotator, 'findTextAnchor').returns(anchor: anchor)
       sinon.stub(annotator, 'getTargetFromRange').returns(target)
       sinon.stub(annotator, 'highlightRange').returns(element)
       sinon.stub(Range, 'sniff').returns(sniffedRange)
