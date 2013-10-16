@@ -516,12 +516,12 @@ class Annotator extends Delegator
 
     anchor
 
-  findImageAnchor: (target, text) ->
+  findImageAnchor: (target, annotation) ->
     selector = this.findSelector target.selector, "ShapeSelector"
     unless selector? then return null
 
     if @plugins['AnnotoriousImagePlugin']
-      @plugins['AnnotoriousImagePlugin'].addAnnotation(selector, text)
+      @plugins['AnnotoriousImagePlugin'].addAnnotation(selector, annotation)
 
   # Try to find the right anchoring point for a given target
   #
@@ -616,7 +616,7 @@ class Annotator extends Delegator
         else
           console.log "Could not find anchor text target for annotation '" +
               annotation.id + "'."
-          anchor = this.findImageAnchor t, annotation.text
+          anchor = this.findImageAnchor t, annotation
           console.log anchor
       catch exception
         if exception.stack? then console.log exception.stack
