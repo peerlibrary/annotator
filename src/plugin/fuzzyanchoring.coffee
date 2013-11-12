@@ -36,7 +36,7 @@ class Annotator.Plugin.FuzzyAnchoring extends Annotator.Plugin
     expectedEnd = posSelector?.end
 
     options =
-      contextMatchDistance: @annotator.domMapper.getDocLength() * 2
+      contextMatchDistance: @annotator.domMapper.getCorpus().length * 2
       contextMatchThreshold: 0.5
       patternMatchThreshold: 0.5
       flexContext: true
@@ -80,7 +80,7 @@ class Annotator.Plugin.FuzzyAnchoring extends Annotator.Plugin
     expectedStart = posSelector?.start
 
     # Get full document length
-    len = @annotator.domMapper.getDocLength()
+    len = @annotator.domMapper.getCorpus().length
 
     # If we don't have the position saved, start at the middle of the doc
     expectedStart ?= len / 2
