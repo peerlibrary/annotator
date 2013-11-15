@@ -9,6 +9,8 @@ ANNOTATOR=\
 	console.coffee \
 	class.coffee \
 	range.coffee \
+	anchors.coffee \
+	highlights.coffee \
 	annotator.coffee \
 	widget.coffee \
 	editor.coffee \
@@ -25,7 +27,8 @@ PLUGINS=\
 	plugin/permissions.coffee \
 	plugin/store.coffee \
 	plugin/tags.coffee \
-	plugin/fuzzyanchoring.coffee \
+	plugin/textanchors.coffee \
+	plugin/fuzzytextanchors.coffee \
 	plugin/pdf.coffee \
 	plugin/unsupported.coffee
 
@@ -39,6 +42,8 @@ ANNOTATOR_FULL=\
 	plugin/filter.coffee \
 	plugin/markdown.coffee \
 	plugin/tags.coffee \
+	plugin/textanchors.coffee \
+	plugin/fuzzytextanchors.coffee \
 	plugin/kitchensink.coffee
 
 BOOKMARKLET=\
