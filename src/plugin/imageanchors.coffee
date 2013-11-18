@@ -32,6 +32,9 @@ class ImageHighlight extends Annotator.Highlight
   removeFromDocument: ->
     # TODO: kill this highlight
 
+  # React to changes in the underlying annotation
+  annotationUpdated: ->
+
   _getDOMElements: ->
     # TODO: do we have actual HTML elements for the individual highlights over
     # the images?
@@ -89,7 +92,7 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
 
     # TODO init stuff, boot up other libraries,
     # create the required UI, etc.
-    @annotorious = new Annotorious.ImagePlugin wrapper, {}, @imagelist
+    @annotorious = new Annotorious.ImagePlugin wrapper, {}, this, @imagelist
 
 
     # Register the image anchoring strategy
@@ -129,8 +132,7 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
       image, selector.shapeType, selector.geometry
 
   # This method is triggered by Annotorious to create image annotation
-  # TODO: call this from Annotorious
-  annotate: (image, shape, geometry, tempId) ->
+  annotate: (source, shape, geometry, tempID) ->
     # Prepare a target describing selection
 
     # Prepare data for Annotator about the selected target
@@ -139,7 +141,7 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
         source: annotator.getHref()
         selector: [
           type: "ShapeSelector"
-          image: image
+          source: source
           shapeType: shape
           geometry: geometry
         ]
@@ -150,3 +152,7 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
 
     # Trigger the creation of a new annotation
     @annotator.onSuccessfulSelection event, true
+
+  # This method is triggered by Annotorious to show a list of annotations
+  showAnnotations: (annotations) =>
+    @annotator.onAnchorClick annotations
