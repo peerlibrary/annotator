@@ -31,6 +31,7 @@ PLUGINS=\
 	plugin/texthighlights.coffee \
 	plugin/textanchors.coffee \
 	plugin/fuzzytextanchors.coffee \
+	plugin/imageanchors.coffee \
 	plugin/pdf.coffee \
 	plugin/unsupported.coffee
 
