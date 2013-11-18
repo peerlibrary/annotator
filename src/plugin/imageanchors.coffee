@@ -1,14 +1,56 @@
 class ImageHighlight extends Annotator.Highlight
+  # Create annotorious shape styles
+  @invisibleStyle =
+    outline: undefined
+    hi_outline: undefined
+    stroke: undefined
+    hi_stroke: undefined
+    fill: undefined
+    hi_fill: undefined
 
-  constructor: (anchor, pageIndex, image, shape, geometry) ->
+  @defaultStyle =
+    outline: '#000000'
+    hi_outline: '#000000'
+    stroke: '#ffffff'
+    hi_stroke: '#fff000'
+    fill: undefined
+    hi_fill: undefined
+
+  @highlightStyle =
+    outline: '#000000'
+    hi_outline: '#000000'
+    stroke: '#fff000'
+    hi_stroke: '#ff7f00'
+    fill: undefined
+    hi_fill: undefined
+
+  constructor: (anchor, pageIndex, image, shape, geometry, @annotorious) ->
     super anchor, pageIndex
 
-    # TODO: create the actual highlight over the image,
     # using the image, shape, geometry arguments.
+    @annotoriousAnnotation =
+      text: @annotation.text
+      id: @annotation.id
+      temporaryID: @annotation.temporaryImageID
+      source: image.source
+      highlight: this
+
+    @annotorious.addAnnotationFromHighlight @annotoriousAnnotation, image, shape, geometry, @defaultStyle
 
     # TODO: prepare event handlers that call @annotator's
     # onAnchorMouseover, onAnchorMouseout, onAnchorMousedown, onAnchorClick
     # methods, with the appropriate list of annotations
+
+  # React to changes in the underlying annotation
+  annotationUpdated: ->
+    @annotoriousAnnotation.text = @annotation.text
+    @annotoriousAnnotation.id = @annotation.id
+    if oldID != @annotation.id then @annotoriousAnnotation.temporaryID = undefined
+
+  # Remove all traces of this hl from the document
+  removeFromDocument: ->
+    @annotorious.deleteAnnotation @annotoriousAnnotation
+    # TODO: kill this highlight
 
   # Is this a temporary hl?
   isTemporary: -> @_temporary
@@ -28,12 +70,7 @@ class ImageHighlight extends Annotator.Highlight
     else
       # TODO: unmark it as an active HL
 
-  # Remove all traces of this hl from the document
-  removeFromDocument: ->
-    # TODO: kill this highlight
 
-  # React to changes in the underlying annotation
-  annotationUpdated: ->
 
   _getDOMElements: ->
     # TODO: do we have actual HTML elements for the individual highlights over
@@ -62,7 +99,7 @@ class ImageHighlight extends Annotator.Highlight
 class ImageAnchor extends Annotator.Anchor
 
   constructor: (annotator, annotation, target,
-      startPage, endPage, quote, @image, @shape, @geometry) ->
+      startPage, endPage, quote, @image, @shape, @geometry, @annotorious) ->
 
     super annotator, annotation, target, startPage, endPage, quote
 
@@ -74,7 +111,7 @@ class ImageAnchor extends Annotator.Anchor
 
     # Create the highlight
     new ImageHighlight this, page,
-      @image, @shape, @geometry
+      @image, @shape, @geometry, @annotorious
 
 
 # Annotator plugin for image annotations
@@ -91,9 +128,8 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
       @images[image.src] = image
 
     # TODO init stuff, boot up other libraries,
-    # create the required UI, etc.
+    # Create the required UI, etc.
     @annotorious = new Annotorious.ImagePlugin wrapper, {}, this, @imagelist
-
 
     # Register the image anchoring strategy
     @annotator.anchoringStrategies.push
@@ -129,7 +165,7 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
     # Return an image anchor
     new ImageAnchor @annotator, annotation, target, # Mandatory data
       0, 0, '', # Page numbers. If we want multi-page (=pdf) support, find that out
-      image, selector.shapeType, selector.geometry
+      image, selector.shapeType, selector.geometry, @annotorious
 
   # This method is triggered by Annotorious to create image annotation
   annotate: (source, shape, geometry, tempID) ->
