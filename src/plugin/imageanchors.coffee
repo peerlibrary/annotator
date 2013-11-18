@@ -1,7 +1,7 @@
 class ImageHighlight extends Annotator.Highlight
 
   constructor: (anchor, pageIndex, image, shape, geometry) ->
-    super acnhor, pageIndex
+    super anchor, pageIndex
 
     # TODO: create the actual highlight over the image,
     # using the image, shape, geometry arguments.
@@ -80,6 +80,11 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
   pluginInit: ->
     # Initialize whatever we have to
 
+    # Collect the images within the wrapper
+    @images = {}
+    for image in $(@annotator.wrapper[0]).find('img')
+      @images[image.src] = image
+
     # TODO init stuff, boot up other libraries,
     # create the required UI, etc.
 
@@ -89,36 +94,37 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
       name: "image"
       code: this.createImageAnchor
 
+
     # Upon creating an annotation,
     @annotator.on 'beforeAnnotationCreated', (annotation) =>
      # Check whether we have triggered it
      if @pendingID
        # Yes, this is a newly created image annotation
        # Pass back the ID, so that Annotorious can recognize it
-       annotator.temporaryImageID = @pendingID
+       annotation.temporaryImageID = @pendingID
        delete @pendingID
 
   # This method is used by Annotator to attempt to create image anchors
-  createImageAnchor: (annotation, target) ->
+  createImageAnchor: (annotation, target) =>
     # Fetch the image selector
-    selector = @findSelector target.selector, "ShapeSelector"
+    selector = @annotator.findSelector target.selector, "ShapeSelector"
 
     # No image selector, no image anchor
     return unless selector?
 
-    # TODO: find the image / verify that it exists
-    image = @_compute selector.source
+    # Find the image / verify that it exists
+    image = @images[selector.source]
 
     # If we can't find the image, return null.
     return null unless image
 
     # Return an image anchor
-    new ImageAnchor this, annotation, target, # Mandatory data
-      0, 0, # Page numbers. If we want multi-page (=pdf) suppoer, find that out
+    new ImageAnchor @annotator, annotation, target, # Mandatory data
+      0, 0, # Page numbers. If we want multi-page (=pdf) support, find that out
       image, selector.shapeType, selector.geometry
 
   # This method is triggered by Annotorious to create image annotation
-  # TODO: call this from ANnotorious
+  # TODO: call this from Annotorious
   annotate: (image, shape, geometry, tempId) ->
     # Prepare a target describing selection
 
