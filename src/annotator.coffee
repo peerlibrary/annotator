@@ -97,6 +97,7 @@ class Annotator extends Delegator
     # Return early if the annotator is not supported.
     return this unless Annotator.supported()
     this._setupDocumentEvents() unless @options.readOnly
+    this._setupAnchorEvents()
     this._setupWrapper()
     unless @options.noMatching
       this._setupDocumentAccessStrategies()
@@ -216,6 +217,14 @@ class Annotator extends Delegator
       "mousedown": this.checkForStartSelection
     })
     this
+
+  # Sets up handlers to anchor-related events
+  _setupAnchorEvents: ->
+    # When annotations are updated
+    @on 'annotationUpdated', (annotation) =>
+      # Notify the anchors
+      for anchor in annotation.anchors or []
+        anchor.annotationUpdated()
 
   # Sets up any dynamically calculated CSS for the Annotator.
   #
