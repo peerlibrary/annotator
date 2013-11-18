@@ -59,15 +59,15 @@ class ImageHighlight extends Annotator.Highlight
 class ImageAnchor extends Annotator.Anchor
 
   constructor: (annotator, annotation, target,
-      startPage, endPage, @image, @shape, @geometry) ->
+      startPage, endPage, quote, @image, @shape, @geometry) ->
 
-    super annotator, annotation, target, startPage, endPage
+    super annotator, annotation, target, startPage, endPage, quote
 
   # This is how we create a highlight out of this kind of anchor
   _createHighlight: (page) ->
 
     # TODO: compute some magic from the initial data, if we have to
-    _doMagic()
+    #_doMagic()
 
     # Create the highlight
     new ImageHighlight this, page,
@@ -82,11 +82,15 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
 
     # Collect the images within the wrapper
     @images = {}
-    for image in $(@annotator.wrapper[0]).find('img')
+    wrapper = @annotator.wrapper[0]
+    @imagelist = $(wrapper).find('img')
+    for image in @imagelist
       @images[image.src] = image
 
     # TODO init stuff, boot up other libraries,
     # create the required UI, etc.
+    @annotorious = new Annotorious.ImagePlugin wrapper, {}, @imagelist
+
 
     # Register the image anchoring strategy
     @annotator.anchoringStrategies.push
@@ -113,6 +117,7 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
     return unless selector?
 
     # Find the image / verify that it exists
+    # TODO: Maybe store image hash and compare them.
     image = @images[selector.source]
 
     # If we can't find the image, return null.
@@ -120,7 +125,7 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
 
     # Return an image anchor
     new ImageAnchor @annotator, annotation, target, # Mandatory data
-      0, 0, # Page numbers. If we want multi-page (=pdf) support, find that out
+      0, 0, '', # Page numbers. If we want multi-page (=pdf) support, find that out
       image, selector.shapeType, selector.geometry
 
   # This method is triggered by Annotorious to create image annotation
