@@ -32,7 +32,7 @@ class ImageHighlight extends Annotator.Highlight
       text: @annotation.text
       id: @annotation.id
       temporaryID: @annotation.temporaryImageID
-      source: image.source
+      source: image.src
       highlight: this
 
     @annotorious.addAnnotationFromHighlight @annotoriousAnnotation, image, shape, geometry, @defaultStyle
