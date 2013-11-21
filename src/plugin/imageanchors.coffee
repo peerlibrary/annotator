@@ -121,6 +121,7 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
 
   pluginInit: ->
     # Initialize whatever we have to
+    @highlightType = 'ImageHighlight'
 
     # Collect the images within the wrapper
     @images = {}
@@ -193,4 +194,5 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
 
   # This method is triggered by Annotorious to show a list of annotations
   showAnnotations: (annotations) =>
-    @annotator.onAnchorClick annotations
+    @annotator.onAnchorMousedown annotations, @highlightType
+    @annotator.onAnchorClick annotations, @highlightType
