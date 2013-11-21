@@ -37,7 +37,10 @@ class ImageHighlight extends Annotator.Highlight
       source: image.src
       highlight: this
 
-    @annotorious.addAnnotationFromHighlight @annotoriousAnnotation, image, shape, geometry, @defaultStyle
+    if @annotation.temporaryImageID
+      @annotoriousAnnotation = @annotorious.updateAnnotationAfterCreatingAnnotatorHighlight @annotoriousAnnotation
+    else
+      @annotorious.addAnnotationFromHighlight @annotoriousAnnotation, image, shape, geometry, @defaultStyle
 
     # TODO: prepare event handlers that call @annotator's
     # onAnchorMouseover, onAnchorMouseout, onAnchorMousedown, onAnchorClick
