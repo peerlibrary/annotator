@@ -12,6 +12,7 @@ class TextHighlight extends Annotator.Highlight
   # TODO: Is this really the way to go? How do other plugins do it?
   @Annotator = Annotator
   @$ = Annotator.$
+  @highlightType = 'TextHighlight'
 
   # Is this element a text highlight physical anchor ?
   @isInstance: (element) -> @$(element).hasClass 'annotator-hl'
@@ -34,16 +35,16 @@ class TextHighlight extends Annotator.Highlight
         .map -> return TextHighlight.$(this).data("annotation")
 
     annotator.addEvent ".annotator-hl", "mouseover", (event) =>
-      annotator.onAnchorMouseover getAnnotations event
+      annotator.onAnchorMouseover getAnnotations event, @highlightType
 
     annotator.addEvent ".annotator-hl", "mouseout", (event) =>
-      annotator.onAnchorMouseout getAnnotations event
+      annotator.onAnchorMouseout getAnnotations event, @highlightType
 
     annotator.addEvent ".annotator-hl", "mousedown", (event) =>
-      annotator.onAnchorMousedown getAnnotations event
+      annotator.onAnchorMousedown getAnnotations event, @highlightType
 
     annotator.addEvent ".annotator-hl", "click", (event) =>
-      annotator.onAnchorClick getAnnotations event
+      annotator.onAnchorClick getAnnotations event, @highlightType
 
     @_inited.push annotator
 
