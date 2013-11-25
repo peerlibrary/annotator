@@ -42,6 +42,7 @@ class ImageHighlight extends Annotator.Highlight
     else
       @annotorious.addAnnotationFromHighlight @annotoriousAnnotation, image, shape, geometry, @defaultStyle
 
+    @oldID = @annotation.id
     @_image = @annotorious.getImageForAnnotation @annotoriousAnnotation
     # TODO: prepare event handlers that call @annotator's
     # onAnchorMouseover, onAnchorMouseout, onAnchorMousedown, onAnchorClick
@@ -51,7 +52,8 @@ class ImageHighlight extends Annotator.Highlight
   annotationUpdated: ->
     @annotoriousAnnotation.text = @annotation.text
     @annotoriousAnnotation.id = @annotation.id
-    if oldID != @annotation.id then @annotoriousAnnotation.temporaryID = undefined
+    if @oldID != @annotation.id then @annotoriousAnnotation.temporaryID = undefined
+    @annotation.temporaryImageID = undefined
 
   # Remove all traces of this hl from the document
   removeFromDocument: ->
