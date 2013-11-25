@@ -42,6 +42,7 @@ class ImageHighlight extends Annotator.Highlight
     else
       @annotorious.addAnnotationFromHighlight @annotoriousAnnotation, image, shape, geometry, @defaultStyle
 
+    @_image = @annotorious.getImageForAnnotation @annotoriousAnnotation
     # TODO: prepare event handlers that call @annotator's
     # onAnchorMouseover, onAnchorMouseout, onAnchorMousedown, onAnchorClick
     # methods, with the appropriate list of annotations
@@ -74,7 +75,7 @@ class ImageHighlight extends Annotator.Highlight
     @active = value
     @annotorious.drawAnnotationHighlight @annotoriousAnnotation
 
-  _getDOMElements: ->
+  _getDOMElements: -> @_image
     # TODO: do we have actual HTML elements for the individual highlights over
     # the images?
     #
@@ -82,10 +83,10 @@ class ImageHighlight extends Annotator.Highlight
     # If no, remove this method, and implement the ones below
 
   # Get the Y offset of the highlight. Override for more control
-  getTop: -> # TODO: get Y offset
+  getTop: -> $(@_getDOMElements()).offset().top + @annotoriousAnnotation.heatmapGeometry.y
 
   # Get the height of the highlight. Override for more control
-  getHeight: -> # TODO: get height
+  getHeight: -> @annotoriousAnnotation.heatmapGeometry.h
 
   # Get the bottom Y offset of the highlight. Override for more control.
   getBottom: -> # TODO: get bottom
