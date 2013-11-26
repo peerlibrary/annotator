@@ -30,16 +30,16 @@ class TextHighlight extends Annotator.Highlight
         .map -> return TextHighlight.$(this).data("annotation")
 
     annotator.addEvent ".annotator-hl", "mouseover", (event) =>
-      annotator.onAnchorMouseover getAnnotations event, @highlightType
+      annotator.onAnchorMouseover (getAnnotations event), TextHighlight.highlightType
 
     annotator.addEvent ".annotator-hl", "mouseout", (event) =>
-      annotator.onAnchorMouseout getAnnotations event, @highlightType
+      annotator.onAnchorMouseout (getAnnotations event), TextHighlight.highlightType
 
     annotator.addEvent ".annotator-hl", "mousedown", (event) =>
-      annotator.onAnchorMousedown getAnnotations event, @highlightType
+      annotator.onAnchorMousedown (getAnnotations event), TextHighlight.highlightType
 
     annotator.addEvent ".annotator-hl", "click", (event) =>
-      annotator.onAnchorClick getAnnotations event, @highlightType
+      annotator.onAnchorClick (getAnnotations event), TextHighlight.highlightType
 
     @_inited.push annotator
 
@@ -84,6 +84,7 @@ class TextHighlight extends Annotator.Highlight
 
     @$ = TextHighlight.$
     @Annotator = TextHighlight.Annotator
+    @highlightType = 'TextHighlight'
 
     # Create a highlights, and link them with the annotation
     @_highlights = @_highlightRange normedRange
