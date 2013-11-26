@@ -200,5 +200,6 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
 
   # This method is triggered by Annotorious to show a list of annotations
   showAnnotations: (annotations) =>
+    return unless annotations.length
     @annotator.onAnchorMousedown annotations, @highlightType
     @annotator.onAnchorClick annotations, @highlightType
