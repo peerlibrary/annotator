@@ -72,10 +72,6 @@ class ImageHighlight extends Annotator.Highlight
   # Mark/unmark this hl as active
   setTemporary: (value) ->
     @_temporary = value
-    if value
-      # TODO: mark it as a temporary HL
-    else
-      # TODO: unmark it as a temporary HL
 
   # Mark/unmark this hl as active
   setActive: (value) ->
@@ -84,11 +80,6 @@ class ImageHighlight extends Annotator.Highlight
     @annotorious.drawAnnotationHighlight @annotoriousAnnotation
 
   _getDOMElements: -> @_image
-    # TODO: do we have actual HTML elements for the individual highlights over
-    # the images?
-    #
-    # If yes, then return them here, and remove everything from below
-    # If no, remove this method, and implement the ones below
 
   # Get the Y offset of the highlight. Override for more control
   getTop: -> @$(@_getDOMElements()).offset().top + @annotoriousAnnotation.heatmapGeometry.y
@@ -103,6 +94,13 @@ class ImageHighlight extends Annotator.Highlight
   # up should be true if we need to scroll up; false otherwise
   paddedScrollTo: (direction) -> @scrollTo()
     # TODO; scroll to this, with some padding
+
+  setVisibleHighlight: (state) ->
+    if state
+      @annotorious.updateShapeStyle @annotoriousAnnotation, @highlightStyle
+    else
+      @annotorious.updateShapeStyle @annotoriousAnnotation, @defaultStyle
+    @annotorious.drawAnnotationHighlight @annotoriousAnnotation
 
 class ImageAnchor extends Annotator.Anchor
 
@@ -155,6 +153,12 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
        # Pass back the ID, so that Annotorious can recognize it
        annotation.temporaryImageID = @pendingID
        delete @pendingID
+
+    # Reacting to always-on-highlights mode
+    @annotator.subscribe "setVisibleHighlights", (state) =>
+      imageHighlights = @annotator.getHighlights().filter( (hl) -> hl instanceof ImageHighlight )
+      for hl in imageHighlights
+        hl.setVisibleHighlight state
 
   # This method is used by Annotator to attempt to create image anchors
   createImageAnchor: (annotation, target) =>
