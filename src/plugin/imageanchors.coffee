@@ -24,8 +24,14 @@ class ImageHighlight extends Annotator.Highlight
     fill: undefined
     hi_fill: undefined
 
+  @Annotator = Annotator
+  @$ = Annotator.$
+
   constructor: (anchor, pageIndex, image, shape, geometry, @annotorious) ->
     super anchor, pageIndex
+
+    @$ = ImageHighlight.$
+    @Annotator = ImageHighlight.Annotator
 
     @alwaysOnMode = false
     @active = false
@@ -85,20 +91,17 @@ class ImageHighlight extends Annotator.Highlight
     # If no, remove this method, and implement the ones below
 
   # Get the Y offset of the highlight. Override for more control
-  getTop: -> $(@_getDOMElements()).offset().top + @annotoriousAnnotation.heatmapGeometry.y
+  getTop: -> @$(@_getDOMElements()).offset().top + @annotoriousAnnotation.heatmapGeometry.y
 
   # Get the height of the highlight. Override for more control
   getHeight: -> @annotoriousAnnotation.heatmapGeometry.h
 
-  # Get the bottom Y offset of the highlight. Override for more control.
-  getBottom: -> # TODO: get bottom
-
   # Scroll the highlight into view. Override for more control
-  scrollTo: -> # TODO: scroll to this
+  scrollTo: -> @$(@_getDOMElements()).scrollintoview()
 
   # Scroll the highlight into view, with a comfortable margin.
   # up should be true if we need to scroll up; false otherwise
-  paddedScrollTo: (direction) ->
+  paddedScrollTo: (direction) -> @scrollTo()
     # TODO; scroll to this, with some padding
 
 class ImageAnchor extends Annotator.Anchor
