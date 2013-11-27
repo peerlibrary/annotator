@@ -33,7 +33,7 @@ class ImageHighlight extends Annotator.Highlight
     @$ = ImageHighlight.$
     @Annotator = ImageHighlight.Annotator
 
-    @alwaysOnMode = false
+    @visibleHighlight = false
     @active = false
     # using the image, shape, geometry arguments.
     @annotoriousAnnotation =
@@ -69,7 +69,7 @@ class ImageHighlight extends Annotator.Highlight
   # Is this a temporary hl?
   isTemporary: -> @_temporary
 
-  # Mark/unmark this hl as active
+  # Mark/unmark this hl as temporary
   setTemporary: (value) ->
     @_temporary = value
 
@@ -77,7 +77,7 @@ class ImageHighlight extends Annotator.Highlight
   setActive: (value) ->
     # TODO: Consider alwaysonannotation
     @active = value
-    @annotorious.drawAnnotationHighlight @annotoriousAnnotation
+    @annotorious.drawAnnotationHighlight @annotoriousAnnotation, @visibleHighlight
 
   _getDOMElements: -> @_image
 
@@ -96,11 +96,12 @@ class ImageHighlight extends Annotator.Highlight
     # TODO; scroll to this, with some padding
 
   setVisibleHighlight: (state) ->
+    @visibleHighlight = state
     if state
       @annotorious.updateShapeStyle @annotoriousAnnotation, @highlightStyle
     else
       @annotorious.updateShapeStyle @annotoriousAnnotation, @defaultStyle
-    @annotorious.drawAnnotationHighlight @annotoriousAnnotation
+    @annotorious.drawAnnotationHighlight @annotoriousAnnotation, @visibleHighlight
 
 class ImageAnchor extends Annotator.Anchor
 
