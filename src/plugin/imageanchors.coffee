@@ -74,10 +74,11 @@ class ImageHighlight extends Annotator.Highlight
     @_temporary = value
 
   # Mark/unmark this hl as active
-  setActive: (value) ->
+  setActive: (value, batch = false) ->
     # TODO: Consider alwaysonannotation
     @active = value
-    @annotorious.drawAnnotationHighlight @annotoriousAnnotation, @visibleHighlight
+    unless batch
+      @annotorious.drawAnnotationHighlights @annotoriousAnnotation.source, @visibleHighlight
 
   _getDOMElements: -> @_image
 
@@ -95,13 +96,15 @@ class ImageHighlight extends Annotator.Highlight
   paddedScrollTo: (direction) -> @scrollTo()
     # TODO; scroll to this, with some padding
 
-  setVisibleHighlight: (state) ->
+  setVisibleHighlight: (state, batch = false) ->
     @visibleHighlight = state
     if state
       @annotorious.updateShapeStyle @annotoriousAnnotation, @highlightStyle
     else
       @annotorious.updateShapeStyle @annotoriousAnnotation, @defaultStyle
-    @annotorious.drawAnnotationHighlight @annotoriousAnnotation, @visibleHighlight
+
+    unless batch
+      @annotorious.drawAnnotationHighlights @annotoriousAnnotation.source, @visibleHighlight
 
 class ImageAnchor extends Annotator.Anchor
 
@@ -130,6 +133,7 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
 
     # Collect the images within the wrapper
     @images = {}
+    @visibleHighlights = false
     wrapper = @annotator.wrapper[0]
     @imagelist = $(wrapper).find('img')
     for image in @imagelist
@@ -157,9 +161,18 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
 
     # Reacting to always-on-highlights mode
     @annotator.subscribe "setVisibleHighlights", (state) =>
+      @visibleHighlights = state
       imageHighlights = @annotator.getHighlights().filter( (hl) -> hl instanceof ImageHighlight )
       for hl in imageHighlights
-        hl.setVisibleHighlight state
+        hl.setVisibleHighlight state, true
+
+      for src, _ of @images
+        @annotorious.drawAnnotationHighlights src, @visibleHighlights
+
+    # Reacting to finalizeHighlights
+    @annotator.subscribe "finalizeHighlights", =>
+      for src, _ of @images
+        @annotorious.drawAnnotationHighlights src, @visibleHighlights
 
   # This method is used by Annotator to attempt to create image anchors
   createImageAnchor: (annotation, target) =>
