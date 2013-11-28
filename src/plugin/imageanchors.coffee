@@ -135,7 +135,7 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
     @images = {}
     @visibleHighlights = false
     wrapper = @annotator.wrapper[0]
-    @imagelist = $(wrapper).find('img')
+    @imagelist = $(wrapper).find('img:visible')
     for image in @imagelist
       @images[image.src] = image
 
