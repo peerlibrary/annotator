@@ -195,7 +195,7 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
       image, selector.shapeType, selector.geometry, @annotorious
 
   # This method is triggered by Annotorious to create image annotation
-  annotate: (source, shape, geometry, tempID) ->
+  annotate: (source, shape, geometry, tempID, annotoriousAnnotation) ->
     # Prepare a target describing selection
 
     # Prepare data for Annotator about the selected target
@@ -214,7 +214,9 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
     @pendingID = tempID
 
     # Trigger the creation of a new annotation
-    @annotator.onSuccessfulSelection event, true
+    result = @annotator.onSuccessfulSelection event, true
+    unless result
+      @annotorious.deleteAnnotation annotoriousAnnotation
 
   # This method is triggered by Annotorious to show a list of annotations
   showAnnotations: (annotations) =>
