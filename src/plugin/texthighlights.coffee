@@ -48,11 +48,12 @@ class TextHighlight extends Annotator.Highlight
     @_inited.push annotator
 
   # Publish an event about a DOM change by us
-  _publishChange: (reason, node) ->
+  _publishChange: (reason) ->
     event = document.createEvent "UIEvents"
     event.initUIEvent "domChange", true, false, window, 0
     event.reason = reason
-    node ?= document.body
+    node = @annotator.domMapper.getPageRoot @pageIndex
+    console.log "HL: page root is ", node.tagName
     node.dispatchEvent event
     null
 
