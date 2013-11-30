@@ -417,13 +417,13 @@ class Annotator extends Delegator
       throw new Error "Can not run setupAnnotation(). No target or selection available."
 
     # Anchor this annotation
-    this.anchor annotation
+    this.anchorAnnotation annotation
 
     # Return the final form
     annotation
 
   # Creates the necessary anchors for the given annotation
-  anchor: (annotation) ->
+  anchorAnnotation: (annotation) ->
 
     annotation.quote = []
     annotation.quote = (null for t in annotation.target)
