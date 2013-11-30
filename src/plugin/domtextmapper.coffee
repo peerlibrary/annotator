@@ -55,5 +55,4 @@ class Annotator.Plugin.DomTextMapper extends Annotator.Plugin
 
     # Phase 3: send out notifications and updates
 
-    @annotator.plugins.Heatmap?._update()
     @annotator.publish "annotationsLoaded", [annotations.slice()]
