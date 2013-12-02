@@ -128,7 +128,7 @@
             }
           });
 
-        devAnnotator._scan()
+        devAnnotator._scan("booting");
 
         devAnnotator.plugins.Auth.withToken(function (tok) {
           console.log(tok);

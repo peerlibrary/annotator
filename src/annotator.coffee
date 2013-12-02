@@ -140,7 +140,8 @@ class Annotator extends Delegator
 
   # Initializes the components used for analyzing the document
   _chooseAccessPolicy: ->
-    if @domMapper? then return
+    # If we have already initialized policy, don't bother.
+    return if @domMapper?
 
     # Go over the available strategies
     for s in @documentAccessStrategies
