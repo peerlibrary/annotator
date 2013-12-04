@@ -155,11 +155,21 @@ class Annotator extends Delegator
   _scan: ->
     # If we haven't yet chosen a document access strategy, do so now.
     this._chooseAccessPolicy() unless @domMapper
-    @pendingScan = @domMapper.scan()
-    if @pendingScan?
-      @pendingScan.then => @enableAnnotating()
-    else
-      @enableAnnotating()
+
+    # Do the scan, and when done, enable annotating
+    dfd = @domMapper.scan()
+
+    # If the strategy did not return a promise, we will create one
+    unless dfd
+      dfd = $.Deferred()
+      dfd.resolve()
+
+    # After the scanning, enable annotating
+    dfd.then @enableAnnotating()
+
+    # Return the promise
+    dfd.promise()
+
 
   # Wraps the children of @element in a @wrapper div. NOTE: This method will also
   # remove any script elements inside @element to prevent them re-executing.
@@ -517,17 +527,9 @@ class Annotator extends Delegator
     if annotations.length # Do we have to do something?
 
       # Ensure that we have a doc access strategy
-      @_scan()
-
-      if @pendingScan?    # Is there a pending scan?
-        # Schedule the parsing the annotations for
-        # when scan has finished
-        @pendingScan.then =>
-          #console.log "Document scan finished. Can start anchoring."
-          setTimeout => loader annotations
-      else # no pending scan
-        # We can start parsing them right away
-        loader annotations
+      @_scan().then =>
+        #console.log "Document scan finished. Can start anchoring."
+        setTimeout => loader annotations
     this
 
   # Public: Calls the Store#dumpAnnotations() method.
