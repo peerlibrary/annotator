@@ -396,11 +396,8 @@ class Annotator extends Delegator
     unless annotation.target?
       throw new Error "Can not run setupAnnotation(). No target or selection available."
 
-    # Anchor this annotation
+    # Get a promise to anchor this annotation
     this.anchorAnnotation annotation
-
-    # Return the final form
-    annotation
 
   # Creates the necessary anchors for the given annotation
   anchorAnnotation: (annotation) ->
