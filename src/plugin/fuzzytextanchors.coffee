@@ -8,9 +8,6 @@ class Annotator.Plugin.FuzzyTextAnchors extends Annotator.Plugin
     # Do we have the basic text anchors plugin loaded?
     unless @annotator.plugins.TextAnchors
       throw "The FuzzyTextAnchors Annotator plugin requires the TextAnchors plugin."
-    unless @annotator.plugins.DomTextMapper
-      throw "The FuzzyTextAnchors Annotator plugin requires the DomTextMapper plugin."
-
     # Initialize the text matcher library
     @textFinder = new DomTextMatcher => @annotator.domMapper.getCorpus()
 
@@ -32,6 +29,11 @@ class Annotator.Plugin.FuzzyTextAnchors extends Annotator.Plugin
   twoPhaseFuzzyMatching: (annotation, target) =>
     # Prepare the deferred object
     dfd = @$.Deferred()
+
+    # We need the corpus from the document.
+    unless @annotator.domMapper.getCorpus
+      dfd.reject "can't get corpus of document"
+      return dfd.promise()
 
     # Fetch the quote and the context
     quoteSelector = @annotator.findSelector target.selector, "TextQuoteSelector"
@@ -87,6 +89,11 @@ class Annotator.Plugin.FuzzyTextAnchors extends Annotator.Plugin
   fuzzyMatching: (annotation, target) =>
     # Prepare the deferred object
     dfd = @$.Deferred()
+
+    # We need the corpus from the document.
+    unless @annotator.domMapper.getCorpus
+      dfd.reject "can't get corpus of the document"
+      return dfd.promise()
 
     # Fetch the quote
     quoteSelector = @annotator.findSelector target.selector, "TextQuoteSelector"
