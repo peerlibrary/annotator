@@ -135,7 +135,7 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
     @images = {}
     @visibleHighlights = false
     wrapper = @annotator.wrapper[0]
-    @imagelist = $(wrapper).find('img:visible')
+    @imagelist = $(wrapper).find('img')
     for image in @imagelist
       @images[image.src] = image
 
@@ -201,7 +201,7 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
     # Prepare data for Annotator about the selected target
     event =
       targets: [
-        source: annotator.getHref()
+        source: @annotator.getHref()
         selector: [
           type: "ShapeSelector"
           source: source
