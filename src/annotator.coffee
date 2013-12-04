@@ -156,7 +156,7 @@ class Annotator extends Delegator
     # If we haven't yet chosen a document access strategy, do so now.
     this._chooseAccessPolicy() unless @domMapper
 
-    # Do the scan, and when done, enable annotating
+    # Launch a scan. (This might return a promise.)
     dfd = @domMapper.scan()
 
     # If the strategy did not return a promise, we will create one
@@ -344,24 +344,16 @@ class Annotator extends Delegator
     # Fetch the next strategy to try
     s = strategies.shift()
 
-    #console.log "Trying strategy '" + s.name + "'"
-
     # Get a promise from this strategy
     iteration = s.code annotation, target
 
     # Run this strategy
-    iteration.then( (anchor) =>
-      # This strategy has worked.
-
-      #console.log "Strategy '" + s.name + "' has produced an anchor!"
+    iteration.then( (anchor) => # This strategy has worked.
 
       # We can now resolve the promise
       promise.resolve anchor
 
-    ).fail( (error) =>
-      # This strategy has failed.
-
-      #console.log "Strategy '" + s.name + "' has failed:", error
+    ).fail( (error) => # This strategy has failed.
 
       # Do we have more strategies to try?
       if strategies.length
@@ -382,14 +374,14 @@ class Annotator extends Delegator
     #console.log "Trying to find anchor for target: ", target
 
     # Create a Deferred object
-    deferred = @Annotator.$.Deferred()
+    dfd = @Annotator.$.Deferred()
 
     # Start to go over all the strategies
     @_createAnchorWithStrategies annotation, target,
-      @anchoringStrategies.slice(), deferred
+      @anchoringStrategies.slice(), dfd
 
     # Return the promise
-    deferred.promise()
+    dfd.promise()
 
   # Public: Initialises an annotation either from an object representation or
   # an annotation created with Annotator#createAnnotation(). It finds the

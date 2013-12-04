@@ -74,7 +74,7 @@ class Annotator.Plugin.FuzzyTextAnchors extends Annotator.Plugin
 
     # OK, we have everything
     # Create a TextPositionAnchor from this data
-    dfd.resolve @annotator.TextPositionAnchor @annotator, annotation, target,
+    dfd.resolve new @annotator.TextPositionAnchor @annotator, annotation, target,
       match.start, match.end,
       (@annotator.domMapper.getPageIndexForPos match.start),
       (@annotator.domMapper.getPageIndexForPos match.end),
