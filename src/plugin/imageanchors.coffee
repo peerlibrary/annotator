@@ -152,12 +152,12 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
 
     # Upon creating an annotation,
     @annotator.on 'beforeAnnotationCreated', (annotation) =>
-     # Check whether we have triggered it
-     if @pendingID
-       # Yes, this is a newly created image annotation
-       # Pass back the ID, so that Annotorious can recognize it
-       annotation.temporaryImageID = @pendingID
-       delete @pendingID
+      # Check whether we have triggered it
+      if @pendingID
+        # Yes, this is a newly created image annotation
+        # Pass back the ID, so that Annotorious can recognize it
+        annotation.temporaryImageID = @pendingID
+        delete @pendingID
 
     # Reacting to always-on-highlights mode
     @annotator.subscribe "setVisibleHighlights", (state) =>
@@ -188,6 +188,10 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
 
     # If we can't find the image, return null.
     return null unless image
+
+    # Temporay workaround for highlighter mode
+    if annotation.inject? and @pendingID
+      annotation.temporaryImageID = @pendingID
 
     # Return an image anchor
     new ImageAnchor @annotator, annotation, target, # Mandatory data
