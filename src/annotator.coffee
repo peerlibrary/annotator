@@ -49,7 +49,6 @@ class DummyDocumentAccess
   getPageRoot: -> @rootNode
   getPageIndexForPos: -> 0
   isPageMapped: -> true
-  scan: ->
 
 class Annotator extends Delegator
   # Events to be bound on Annotator#element.
@@ -117,8 +116,10 @@ class Annotator extends Delegator
     this._setupViewer()._setupEditor()
     this._setupDynamicStyle()
 
-    # Perform initial DOM scan, unless told not to.
-    this._scan "Created Annotator" unless @options.noScan
+    # Select a document access policy
+    this._chooseAccessPolicy()
+
+    this.enableAnnotating()
 
     # Create adder
     this.adder = $(this.html.adder).appendTo(@wrapper).hide()
@@ -140,9 +141,6 @@ class Annotator extends Delegator
 
   # Initializes the components used for analyzing the document
   _chooseAccessPolicy: ->
-    # If we have already initialized policy, don't bother.
-    return if @domMapper?
-
     # Go over the available strategies
     for s in @documentAccessStrategies
       # Can we use this strategy for this document?
@@ -156,25 +154,6 @@ class Annotator extends Delegator
         addEventListener "docPageUnmapped", (evt) =>
           @_virtualizePage evt.pageIndex
         return this
-
-  # Perform a scan of the DOM. Required for finding anchors.
-  _scan: (reason) ->
-    # If we haven't yet chosen a document access strategy, do so now.
-    this._chooseAccessPolicy() unless @domMapper
-
-    # Launch a scan. (This might return a promise.)
-    dfd = @domMapper.scan()
-
-    # If the strategy did not return a promise, we will create one
-    unless dfd
-      dfd = $.Deferred()
-      dfd.resolve()
-
-    # After the scanning, enable annotating
-    dfd.then @enableAnnotating()
-
-    # Return the promise
-    dfd.promise()
 
 
   # Wraps the children of @element in a @wrapper div. NOTE: This method will also
@@ -541,11 +520,8 @@ class Annotator extends Delegator
     clone = annotations.slice()
 
     if annotations.length # Do we have to do something?
+      setTimeout => loader annotations
 
-      # Ensure that we have a doc access strategy
-      @_scan().then =>
-        #console.log "Document scan finished. Can start anchoring."
-        setTimeout => loader annotations
     this
 
   # Public: Calls the Store#dumpAnnotations() method.
