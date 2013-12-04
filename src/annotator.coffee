@@ -326,33 +326,60 @@ class Annotator extends Delegator
       if selector.type is type then return selector
     null
 
+
+  # Recursive method to go over the passed list of strategies,
+  # and create an anchor with the first one that succeeds.
+  _createAnchorWithStrategies: (annotation, target, strategies, promise) ->
+
+    # Fetch the next strategy to try
+    s = strategies.shift()
+
+    #console.log "Trying strategy '" + s.name + "'"
+
+    # Get a promise from this strategy
+    iteration = s.code annotation, target
+
+    # Run this strategy
+    iteration.then( (anchor) =>
+      # This strategy has worked.
+
+      #console.log "Strategy '" + s.name + "' has produced an anchor!"
+
+      # We can now resolve the promise
+      promise.resolve anchor
+
+    ).fail( (error) =>
+      # This strategy has failed.
+
+      #console.log "Strategy '" + s.name + "' has failed:", error
+
+      # Do we have more strategies to try?
+      if strategies.length
+        # Check the next strategy.
+        @_createAnchorWithStrategies annotation, target, strategies, promise
+      else
+        # No, it's game over
+        promise.reject()
+    )
+    null
+
   # Try to find the right anchoring point for a given target
   #
-  # Returns an Anchor object if succeeded, null otherwise
+  # Returns a promise, which will be resolved with an Anchor object
   createAnchor: (annotation, target) ->
     unless target?
       throw new Error "Trying to find anchor for null target!"
-#    console.log "Trying to find anchor for target: "
-#    console.log target
+    #console.log "Trying to find anchor for target: ", target
 
-    error = null
-    anchor = null
-    for s in @anchoringStrategies
-      try
-        a = s.code.call this, annotation, target
-        if a
-#          console.log "Strategy '" + s.name + "' yielded an anchor."
-          return result: a
-#        else
-#          console.log "Strategy '" + s.name + "' did NOT yield an anchor."
-      catch error
-#        console.log "Strategy '" + s.name + "' has thrown an error."
-        if error instanceof Range.RangeError
-          return error: error
-        else
-          throw error
+    # Create a Deferred object
+    deferred = @Annotator.$.Deferred()
 
-    return error: "No strategies worked."
+    # Start to go over all the strategies
+    @_createAnchorWithStrategies annotation, target,
+      @anchoringStrategies.slice(), deferred
+
+    # Return the promise
+    deferred.promise()
 
   # Public: Initialises an annotation either from an object representation or
   # an annotation created with Annotator#createAnnotation(). It finds the
@@ -382,44 +409,44 @@ class Annotator extends Delegator
     unless annotation.target?
       throw new Error "Can not run setupAnnotation(). No target or selection available."
 
-    annotation.quote = []
+    annotation.quote = (null for t in annotation.target)
     annotation.anchors = []
 
-    for t in annotation.target
-      try
-        # Create an anchor for this target
-        result = this.createAnchor annotation, t
-        anchor = result.result
-        if result.error? instanceof Range.RangeError
-          this.publish 'rangeNormalizeFail', [annotation, result.error.range, result.error]
-        if anchor?
-          annotation.quote.push t.quote = anchor.quote
-          t.diffHTML = anchor.diffHTML
-          t.diffCaseOnly = anchor.diffCaseOnly
+    promises = for index in [ 0 .. annotation.target.length-1 ]
 
-          # Store this anchor for the annotation
-          annotation.anchors.push anchor
+      t = annotation.target[index]
 
-          # Store the anchor for all involved pages
-          for pageIndex in [anchor.startPage .. anchor.endPage]
-            @anchors[pageIndex] ?= []
-            @anchors[pageIndex].push anchor
+      # Create an anchor for this target
+      this.createAnchor(annotation, t).then( (anchor) =>
+        # We have an anchor
+        annotation.quote[index] = t.quote = anchor.quote
+        t.diffHTML = anchor.diffHTML
+        t.diffCaseOnly = anchor.diffCaseOnly
 
-          # Realizing the anchor
-          anchor.realize()
+        # Store this anchor for the annotation
+        annotation.anchors.push anchor
 
-        else
-          console.log "Could not create anchor for annotation '",
-            annotation.id, "'."
-      catch exception
-        if exception.stack? then console.log exception.stack
-        console.log exception.message
-        console.log exception
+        # Store the anchor for all involved pages
+        for pageIndex in [anchor.startPage .. anchor.endPage]
+          @anchors[pageIndex] ?= []
+          @anchors[pageIndex].push anchor
 
-    # Join all the quotes into one string.
-    annotation.quote = annotation.quote.join(' / ')
+        # Realizing the anchor
+        anchor.realize()
 
-    annotation
+      ).fail( =>
+        console.log "Could not create anchor for annotation '",
+          annotation.id, "'."
+      )
+
+    dfd = @Annotator.$.Deferred()
+
+    @Annotator.$.when(promises...).always =>
+      # Join all the quotes into one string.
+      annotation.quote = annotation.quote.filter((q)->q?).join ' / '
+      dfd.resolve annotation
+
+    dfd.promise()
 
   # Public: Publishes the 'beforeAnnotationUpdated' and 'annotationUpdated'
   # events. Listeners wishing to modify an updated annotation should subscribe
@@ -472,21 +499,26 @@ class Annotator extends Delegator
     loader = (annList=[]) =>
       now = annList.splice(0,10)
 
-      for n in now
-        this.setupAnnotation(n)
+      # Collect promises for all these annotations
+      promises = (this.setupAnnotation(n) for n in now)
 
-      # If there are more to do, do them after a 10ms break (for browser
-      # responsiveness).
-      if annList.length > 0
-        setTimeout((-> loader(annList)), 10)
-      else
-        this.publish 'annotationsLoaded', [clone]
+      # All annotations in this batch are done.
+      $.when(promises...).always =>
+
+        # If there are more to do, do them after a 10ms break (for browser
+        # responsiveness).
+        if annList.length > 0
+          setTimeout((-> loader(annList)), 10)
+        else
+          this.publish 'annotationsLoaded', [clone]
 
     clone = annotations.slice()
 
     if annotations.length # Do we have to do something?
-      # Do we have a doc access strategy? If we don't have it yet, scan!
-      @_scan() unless @domMapper
+
+      # Ensure that we have a doc access strategy
+      @_scan()
+
       if @pendingScan?    # Is there a pending scan?
         # Schedule the parsing the annotations for
         # when scan has finished
