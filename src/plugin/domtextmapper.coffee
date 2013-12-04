@@ -22,5 +22,5 @@ class Annotator.Plugin.DomTextMapper extends Annotator.Plugin
         mapper = new window.DomTextMapper options
         options.rootNode.addEventListener "corpusChange",
           @annotator._reanchorAnnotations
+        mapper.scan "we are initializing d-t-m"
         mapper
-
