@@ -115,10 +115,6 @@ class Annotator extends Delegator
     this._setupDocumentAccessStrategies()
     this._setupViewer()._setupEditor()
     this._setupDynamicStyle()
-
-    # Select a document access policy
-    this._chooseAccessPolicy()
-
     this.enableAnnotating()
 
     # Create adder
@@ -141,6 +137,9 @@ class Annotator extends Delegator
 
   # Initializes the components used for analyzing the document
   _chooseAccessPolicy: ->
+    # We only have to do this once.
+    return if @domMapper
+
     # Go over the available strategies
     for s in @documentAccessStrategies
       # Can we use this strategy for this document?
@@ -389,6 +388,10 @@ class Annotator extends Delegator
   #
   # Returns the initialised annotation.
   setupAnnotation: (annotation) ->
+
+    # To work with annotations, we need to have a document access policy.
+    this._chooseAccessPolicy()
+
     # If this is a new annotation, we might have to add the targets
     annotation.target ?= @selectedTargets
     @selectedTargets = []
