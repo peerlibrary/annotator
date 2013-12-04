@@ -11,6 +11,8 @@
     <script src="lib/vendor/diff_match_patch_uncompressed.js"></script>
     <script src="lib/vendor/text_match_engines.js"></script>
     <script src="lib/vendor/dom_text_matcher.js"></script>
+    <script src="lib/vendor/annotorious.hypo.js"></script>
+    <script src="lib/vendor/fancy_box_selector.js"></script>
     <script src="lib/extensions.js"></script>
     <script src="lib/console.js"></script>
     <script src="lib/class.js"></script>
@@ -32,10 +34,12 @@
     <script src="lib/plugin/domtextmapper.js"></script>
     <script src="lib/plugin/textanchors.js"></script>
     <script src="lib/plugin/fuzzytextanchors.js"></script>
+    <script src="lib/plugin/imageanchors.js"></script>
     <script src="lib/plugin/unsupported.js"></script>
     <script src="lib/plugin/filter.js"></script>
 
     <link rel="stylesheet" type="text/css" href="css/annotator.css">
+    <link rel="stylesheet" type="text/css" href="lib/vendor/annotorious.css">
   </head>
 
   <body>
@@ -101,6 +105,12 @@
           </tr>
         </tbody>
       </table>
+
+      <div>
+        <p>Image test</p>
+        <img src="okfn-logo.png" width="755" height="197"/>
+      </div>
+
     </div>
 
     <script>
@@ -114,10 +124,11 @@
           })
           .addPlugin('Unsupported')
           .addPlugin('AnnotateItPermissions')
-          .addPlugin('TextHighlights')
           .addPlugin('DomTextMapper')
+          .addPlugin('TextHighlights')
           .addPlugin('TextAnchors')
           .addPlugin('FuzzyTextAnchors')
+          .addPlugin('ImageAnchors')
           .addPlugin('Store', {
             prefix: 'http://localhost:5000',
             loadFromSearch: {
