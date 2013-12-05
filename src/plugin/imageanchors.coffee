@@ -131,6 +131,9 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
     # Initialize whatever we have to
     @highlightType = 'ImageHighlight'
 
+    @Annotator = Annotator
+    @$ = Annotator.$
+
     # Collect the images within the wrapper
     @images = {}
     @visibleHighlights = false
