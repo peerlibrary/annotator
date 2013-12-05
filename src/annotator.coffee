@@ -409,33 +409,34 @@ class Annotator extends Delegator
     annotation.quote = (null for t in annotation.target)
     annotation.anchors = []
 
-    promises = for index in [ 0 .. annotation.target.length-1 ]
+    if annotation.target?.length
+      promises = for index in [ 0 .. annotation.target.length-1 ]
+        t = annotation.target[index]
 
-      t = annotation.target[index]
+        # Create an anchor for this target
+        this.createAnchor(annotation, t).then( (anchor) =>
+          # We have an anchor
+          annotation.quote[index] = t.quote = anchor.quote
+          t.diffHTML = anchor.diffHTML
+          t.diffCaseOnly = anchor.diffCaseOnly
 
-      # Create an anchor for this target
-      this.createAnchor(annotation, t).then( (anchor) =>
-        # We have an anchor
-        annotation.quote[index] = t.quote = anchor.quote
-        t.diffHTML = anchor.diffHTML
-        t.diffCaseOnly = anchor.diffCaseOnly
+          # Store this anchor for the annotation
+          annotation.anchors.push anchor
 
-        # Store this anchor for the annotation
-        annotation.anchors.push anchor
+          # Store the anchor for all involved pages
+          for pageIndex in [anchor.startPage .. anchor.endPage]
+            @anchors[pageIndex] ?= []
+            @anchors[pageIndex].push anchor
 
-        # Store the anchor for all involved pages
-        for pageIndex in [anchor.startPage .. anchor.endPage]
-          @anchors[pageIndex] ?= []
-          @anchors[pageIndex].push anchor
+          # Realizing the anchor
+          anchor.realize()
 
-        # Realizing the anchor
-        anchor.realize()
-
-      ).fail( =>
-        console.log "Could not create anchor for annotation '",
-          annotation.id, "'."
-          this.orphans.push annotation        
-      )
+        ).fail( =>
+          console.log "Could not create anchor for annotation '",
+            annotation.id, "'."
+            this.orphans.push annotation
+        )
+    else promises = []
 
     dfd = @Annotator.$.Deferred()
 
