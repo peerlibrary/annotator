@@ -176,27 +176,36 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
 
   # This method is used by Annotator to attempt to create image anchors
   createImageAnchor: (annotation, target) =>
+    # Prepare the deferred object
+    dfd = @$.Deferred()
+
     # Fetch the image selector
     selector = @annotator.findSelector target.selector, "ShapeSelector"
 
     # No image selector, no image anchor
-    return unless selector?
+    unless selector?
+      dfd.reject "no ImageSelector found"
+      return dfd.promise()
 
     # Find the image / verify that it exists
     # TODO: Maybe store image hash and compare them.
     image = @images[selector.source]
 
-    # If we can't find the image, return null.
-    return null unless image
+    # If we can't find the image, we fail
+    unless image
+      dfd.reject ("No such image exists as " + selector.source)
+      return dfd.promise()
 
     # Temporay workaround for highlighter mode
     if annotation.inject? and @pendingID
       annotation.temporaryImageID = @pendingID
 
     # Return an image anchor
-    new ImageAnchor @annotator, annotation, target, # Mandatory data
+    dfd.resolve new ImageAnchor @annotator, annotation, target, # Mandatory data
       0, 0, '', # Page numbers. If we want multi-page (=pdf) support, find that out
       image, selector.shapeType, selector.geometry, @annotorious
+
+    dfd.promise()
 
   # This method is triggered by Annotorious to create image annotation
   annotate: (source, shape, geometry, tempID, annotoriousAnnotation) ->
