@@ -108,7 +108,7 @@
       (function ($) {
         var elem = document.getElementById('airlock');
 
-        devAnnotator = new Annotator(elem, {noScan: true})
+        devAnnotator = new Annotator(elem)
           .addPlugin('Auth', {
             tokenUrl: 'http://localhost:5001/api/token'
           })
@@ -127,8 +127,6 @@
               uri: 'http://localhost/annotator/dev.html'
             }
           });
-
-        devAnnotator._scan("booting");
 
         devAnnotator.plugins.Auth.withToken(function (tok) {
           console.log(tok);
