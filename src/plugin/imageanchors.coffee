@@ -211,8 +211,7 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
           geometry: geometry
         ]
       ]
-      annotationData:
-        temporaryImageID: tempID
+      temporaryImageID: tempID
 
     # Trigger the creation of a new annotation
     result = @annotator.onSuccessfulSelection event, true
