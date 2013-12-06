@@ -412,7 +412,6 @@ class Annotator extends Delegator
   # Creates the necessary anchors for the given annotation
   anchorAnnotation: (annotation) ->
 
-    annotation.quote = []
     annotation.quote = (null for t in annotation.target)
     annotation.anchors = []
 
