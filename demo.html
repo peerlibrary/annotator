@@ -98,7 +98,7 @@
         } else {
           // This is the important bit: how to create the annotator and add
           // plugins
-          $('#airlock').annotator({noScan:true})
+          $('#airlock').annotator()
                        .annotator('addPlugin', 'Permissions')
                        .annotator('addPlugin', 'Markdown')
                        .annotator('addPlugin', 'DomTextMapper')
@@ -108,7 +108,6 @@
                        .annotator('addPlugin', 'Tags');
 
           $('#airlock').data('annotator').plugins['Permissions'].setUser("Joe Bloggs");
-          $('#airlock').data('annotator')._scan("booting");
 
         }
       });
