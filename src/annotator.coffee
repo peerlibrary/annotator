@@ -358,7 +358,7 @@ class Annotator extends Delegator
     #console.log "Trying to find anchor for target: ", target
 
     # Create a Deferred object
-    dfd = @Annotator.$.Deferred()
+    dfd = Annotator.$.Deferred()
 
     # Start to go over all the strategies
     @_createAnchorWithStrategies annotation, target,
@@ -437,9 +437,9 @@ class Annotator extends Delegator
           this.orphans.push annotation        
       )
 
-    dfd = @Annotator.$.Deferred()
+    dfd = Annotator.$.Deferred()
 
-    @Annotator.$.when(promises...).always =>
+    Annotator.$.when(promises...).always =>
       # Join all the quotes into one string.
       annotation.quote = annotation.quote.filter((q)->q?).join ' / '
       dfd.resolve annotation
@@ -748,38 +748,38 @@ class Annotator extends Delegator
     annotation = this.createAnnotation()
 
     # Extract the quotation and serialize the ranges
-    annotation = this.setupAnnotation(annotation)
+    this.setupAnnotation(annotation).then (annotation) =>
 
-    # Show a temporary highlight so the user can see what they selected
-    for anchor in annotation.anchors
-      for page, hl of anchor.highlight
-        hl.setTemporary true
-
-    # Make the highlights permanent if the annotation is saved
-    save = =>
-      do cleanup
+      # Show a temporary highlight so the user can see what they selected
       for anchor in annotation.anchors
         for page, hl of anchor.highlight
-          hl.setTemporary false
-      # Fire annotationCreated events so that plugins can react to them
-      this.publish('annotationCreated', [annotation])
+          hl.setTemporary true
 
-    # Remove the highlights if the edit is cancelled
-    cancel = =>
-      do cleanup
-      this.deleteAnnotation(annotation)
+      # Make the highlights permanent if the annotation is saved
+      save = =>
+        do cleanup
+        for anchor in annotation.anchors
+          for page, hl of anchor.highlight
+            hl.setTemporary false
+        # Fire annotationCreated events so that plugins can react to them
+        this.publish('annotationCreated', [annotation])
 
-    # Don't leak handlers at the end
-    cleanup = =>
-      this.unsubscribe('annotationEditorHidden', cancel)
-      this.unsubscribe('annotationEditorSubmit', save)
+      # Remove the highlights if the edit is cancelled
+      cancel = =>
+        do cleanup
+        this.deleteAnnotation(annotation)
 
-    # Subscribe to the editor events
-    this.subscribe('annotationEditorHidden', cancel)
-    this.subscribe('annotationEditorSubmit', save)
+      # Don't leak handlers at the end
+      cleanup = =>
+        this.unsubscribe('annotationEditorHidden', cancel)
+        this.unsubscribe('annotationEditorSubmit', save)
 
-    # Display the editor.
-    this.showEditor(annotation, position)
+      # Subscribe to the editor events
+      this.subscribe('annotationEditorHidden', cancel)
+      this.subscribe('annotationEditorSubmit', save)
+
+      # Display the editor.
+      this.showEditor(annotation, position)
 
   # Annotator#viewer callback function. Displays the Annotator#editor in the
   # positions of the Annotator#viewer and loads the passed annotation for
