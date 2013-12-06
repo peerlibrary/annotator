@@ -2,6 +2,9 @@
 class Annotator.Plugin.DomTextMapper extends Annotator.Plugin
 
   pluginInit: ->
+
+    @Annotator = Annotator
+
     @annotator.documentAccessStrategies.unshift
       # Document access strategy for simple HTML documents,
       # with enhanced text extraction and mapping features.
@@ -20,7 +23,11 @@ class Annotator.Plugin.DomTextMapper extends Annotator.Plugin
           cacheIgnoredParts: true
         options = $.extend {}, defaultOptions, @options.options
         mapper = new window.DomTextMapper options
-        options.rootNode.addEventListener "corpusChange",
-          @annotator._reanchorAnnotations
+        options.rootNode.addEventListener "corpusChange", =>
+          @annotator._reanchorAnnotations @_shouldReanchor
         mapper.scan "we are initializing d-t-m"
         mapper
+
+  _shouldReanchor: (anchor) =>
+    anchor instanceof @Annotator.TextRangeAnchor or
+      anchor instanceof @Annotator.TextPositionAnchor
