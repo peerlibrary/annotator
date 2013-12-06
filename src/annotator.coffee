@@ -70,6 +70,7 @@ class Annotator extends Delegator
   viewer: null
 
   selectedTargets: null
+  selectedData: null
 
   mouseIsDown: false
 
@@ -306,6 +307,12 @@ class Annotator extends Delegator
   # Returns a newly created annotation Object.
   createAnnotation: () ->
     annotation = {}
+
+    # If we have saved some data for this annotation, add it here
+    if @selectedData
+      Annotator.$.extend annotation, @selectedData
+      delete @selectedData
+
     this.publish('beforeAnnotationCreated', [annotation])
     annotation
 
@@ -683,6 +690,7 @@ class Annotator extends Delegator
 
     # Store the selected targets
     @selectedTargets = event.targets
+    @selectedData = event.annotationData
 
     # Do we want immediate annotation?
     if immediate
@@ -699,6 +707,7 @@ class Annotator extends Delegator
   onFailedSelection: (event) ->
     @adder.hide()
     @selectedTargets = []
+    delete @selectedData
 
 
   # Public: Determines if the provided element is part of the annotator plugin.
