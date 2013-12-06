@@ -416,9 +416,9 @@ class Annotator extends Delegator
     annotation.quote = (null for t in annotation.target)
     annotation.anchors = []
 
-    promises = for index in [ 0 .. annotation.target.length-1 ]
+    promises = for t in annotation.target
 
-      t = annotation.target[index]
+      index = annotation.target.indexOf t
 
       # Create an anchor for this target
       this.createAnchor(annotation, t).then( (anchor) =>
