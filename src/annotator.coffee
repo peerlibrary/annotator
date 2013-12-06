@@ -440,7 +440,7 @@ class Annotator extends Delegator
       ).fail( =>
         console.log "Could not create anchor for annotation '",
           annotation.id, "'."
-          this.orphans.push annotation        
+          this.orphans.push annotation unless annotation in this.orphans
       )
 
     dfd = Annotator.$.Deferred()
