@@ -669,7 +669,7 @@ class Annotator extends Delegator
   #            newly created annotation
   #   pageX and pageY: if the adder button is shown, use there coordinates
   #
-  # immadiate - should we show the adder button, or should be proceed
+  # immediate - should we show the adder button, or should be proceed
   #             to create the annotation/highlight immediately ?
   #
   # returns false if the creation of annotations is forbidden at the moment,
