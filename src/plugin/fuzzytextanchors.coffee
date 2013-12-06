@@ -3,6 +3,7 @@ class Annotator.Plugin.FuzzyTextAnchors extends Annotator.Plugin
 
   pluginInit: ->
 
+    @Annotator = Annotator
     @$ = Annotator.$
 
     # Do we have the basic text anchors plugin loaded?
@@ -76,7 +77,7 @@ class Annotator.Plugin.FuzzyTextAnchors extends Annotator.Plugin
 
     # OK, we have everything
     # Create a TextPositionAnchor from this data
-    dfd.resolve new @annotator.TextPositionAnchor @annotator, annotation, target,
+    dfd.resolve new @Annotator.TextPositionAnchor @annotator, annotation, target,
       match.start, match.end,
       (@annotator.domMapper.getPageIndexForPos match.start),
       (@annotator.domMapper.getPageIndexForPos match.end),
@@ -143,7 +144,7 @@ class Annotator.Plugin.FuzzyTextAnchors extends Annotator.Plugin
 
     # OK, we have everything
     # Create a TextPosutionAnchor from this data
-    dfd.resolve new @annotator.TextPositionAnchor @annotator, annotation,
+    dfd.resolve new @Annotator.TextPositionAnchor @annotator, annotation,
       target,
       match.start, match.end,
       (@annotator.domMapper.getPageIndexForPos match.start),

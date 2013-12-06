@@ -107,8 +107,8 @@ class Annotator.Plugin.TextAnchors extends Annotator.Plugin
     })
 
     # Export these anchor types
-    @annotator.TextPositionAnchor = TextPositionAnchor
-    @annotator.TextRangeAnchor = TextRangeAnchor
+    @Annotator.TextPositionAnchor = TextPositionAnchor
+    @Annotator.TextRangeAnchor = TextRangeAnchor
 
     # React to the enableAnnotation event
     @annotator.subscribe "enableAnnotating", (value) => if value
