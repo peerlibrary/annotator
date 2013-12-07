@@ -195,6 +195,11 @@ class window.DomTextMapper
     # Decide whether we are dealing with a corpus change
     corpusChanged = oldContent isnt content
 
+    #if corpusChanged
+    #  @dmp ?= new DTM_DMPMatcher()
+    #  diff = @dmp.compare oldContent, content
+    #  @log "** Corpus change: ", diff
+
     # === Phase 1: Drop the invalidated data
 
     # @log "Dropping obsolete path info for children..."
@@ -246,6 +251,12 @@ class window.DomTextMapper
       oldIndex = if node is node.parentNode.firstChild
         0
       else
+        predecessor = node.previousSibling
+        predecessorPath = @getPathTo predecessor
+        predecessorInfo = @path[predecessorPath]
+        unless predecessorInfo
+          throw new Error "While working on updating '" + path + "', I was trying to look up info about the previous sibling @ '" + predecessorPath + "', but we have none!"
+
         @path[@getPathTo node.previousSibling].end - parentPathInfo.start
 
       # Recursively calculate all the positions
@@ -524,10 +535,14 @@ class window.DomTextMapper
     name + (if pos > 1 then "[#{pos}]" else "")
 
   getPathTo: (node) ->
+    unless origNode = node
+      throw new Error "Called getPathTo with null node!"
     xpath = '';
     while node != @rootNode
       unless node?
-        throw new Error "Called getPathTo on a node which was not a descendant of @rootNode. " + @rootNode
+        @log "Root node:", @rootNode
+        @log "Wanted node:", origNode
+        throw new Error "Called getPathTo on a node which was not a descendant of the configured root node."
       xpath = (@getPathSegment node) + '/' + xpath
       node = node.parentNode
     xpath = (if @rootNode.ownerDocument? then './' else '/') + xpath
