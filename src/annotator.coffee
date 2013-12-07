@@ -365,7 +365,7 @@ class Annotator extends Delegator
       # The strategy has thrown an error!
       console.log "While trying anchoring strategy",
         "'" + s.name + "':",
-      console.log error.message, error.stack
+      console.log error.stack
       onFail "see exception above"
 
     null
