@@ -23,6 +23,8 @@ class TextPositionAnchor extends Annotator.Anchor
     unless @start? then throw new Error "start is required!"
     unless @end? then throw new Error "end is required!"
 
+    #console.log "Created TextPositionAnchor [", start, ":", end, "]"
+
     @Annotator = TextPositionAnchor.Annotator
 
   # This is how we create a highlight out of this kind of anchor
@@ -316,8 +318,12 @@ class Annotator.Plugin.TextAnchors extends Annotator.Plugin
 
       startInfo = @annotator.domMapper.getInfoForNode normedRange.start
       startOffset = startInfo.start
+      unless startOffset
+        throw new Error "node @ '" + startInfo.path + "' has no start field!"
       endInfo = @annotator.domMapper.getInfoForNode normedRange.end
       endOffset = endInfo.end
+      unless endOffset
+        throw new Error "node @ '" + endInfo.path + "' has no end field!"
       @annotator.domMapper.getCorpus()[startOffset .. endOffset-1].trim()
     else
       # Determine the current content of the given range directly
