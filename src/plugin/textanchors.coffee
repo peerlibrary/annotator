@@ -20,8 +20,8 @@ class TextPositionAnchor extends Annotator.Anchor
 
     # This pair of offsets is the key information,
     # upon which this anchor is based upon.
-    unless @start? then throw "start is required!"
-    unless @end? then throw "end is required!"
+    unless @start? then throw new Error "start is required!"
+    unless @end? then throw new Error "end is required!"
 
     @Annotator = TextPositionAnchor.Annotator
 
@@ -63,7 +63,7 @@ class TextRangeAnchor extends Annotator.Anchor
 
     super annotator, annotation, target, 0, 0, quote
 
-    unless @range? then throw "range is required!"
+    unless @range? then throw new Error "range is required!"
 
     @Annotator = TextRangeAnchor.Annotator
 
@@ -83,7 +83,7 @@ class Annotator.Plugin.TextAnchors extends Annotator.Plugin
   pluginInit: ->
     # We need text highlights
     unless @annotator.plugins.TextHighlights
-      throw "The TextAnchors Annotator plugin requires the TextHighlights plugin."
+      throw new Error "The TextAnchors Annotator plugin requires the TextHighlights plugin."
 
     @Annotator = Annotator
     @$ = Annotator.$
