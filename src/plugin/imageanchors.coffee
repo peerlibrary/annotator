@@ -58,8 +58,9 @@ class ImageHighlight extends Annotator.Highlight
   annotationUpdated: ->
     @annotoriousAnnotation.text = @annotation.text
     @annotoriousAnnotation.id = @annotation.id
-    if @oldID != @annotation.id then @annotoriousAnnotation.temporaryID = undefined
-    @annotation.temporaryImageID = undefined
+    if @oldID != @annotation.id
+      delete @annotoriousAnnotation.temporaryID
+    delete @annotation.temporaryImageID
 
   # Remove all traces of this hl from the document
   removeFromDocument: ->
@@ -165,7 +166,11 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
     # Reacting to finalizeHighlights
     @annotator.subscribe "finalizeHighlights", =>
       for src, _ of @images
-        @annotorious.drawAnnotationHighlights src, @visibleHighlights
+        try
+          @annotorious.drawAnnotationHighlights src, @visibleHighlights
+        catch error
+          console.log "Error: failed to draw image highlights for", src
+          console.log error.stack
 
   # This method is used by Annotator to attempt to create image anchors
   createImageAnchor: (annotation, target) =>
@@ -211,7 +216,8 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
           geometry: geometry
         ]
       ]
-      temporaryImageID: tempID
+      annotationData:
+        temporaryImageID: tempID
 
     # Trigger the creation of a new annotation
     result = @annotator.onSuccessfulSelection event, true
