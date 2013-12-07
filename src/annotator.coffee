@@ -335,16 +335,12 @@ class Annotator extends Delegator
     # Fetch the next strategy to try
     s = strategies.shift()
 
-    # Get a promise from this strategy
-    iteration = s.code annotation, target
-
-    # Run this strategy
-    iteration.then( (anchor) => # This strategy has worked.
-
-      # We can now resolve the promise
-      promise.resolve anchor
-
-    ).fail( (error) => # This strategy has failed.
+    # We will do this if this strategy failes
+    onFail = (error) =>
+#      console.log "Anchoring strategy",
+#        "'" + s.name + "'",
+#        "has failed:",
+#        error
 
       # Do we have more strategies to try?
       if strategies.length
@@ -353,7 +349,25 @@ class Annotator extends Delegator
       else
         # No, it's game over
         promise.reject()
-    )
+
+    try
+      # Get a promise from this strategy
+      iteration = s.code annotation, target
+
+      # Run this strategy
+      iteration.then( (anchor) => # This strategy has worked.
+
+        # We can now resolve the promise
+        promise.resolve anchor
+
+      ).fail onFail
+    catch error
+      # The strategy has thrown an error!
+      console.log "While trying anchoring strategy",
+        "'" + s.name + "':",
+      console.log error.message, error.stack
+      onFail "see exception above"
+
     null
 
   # Try to find the right anchoring point for a given target
