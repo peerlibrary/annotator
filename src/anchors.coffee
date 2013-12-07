@@ -31,15 +31,28 @@ class Anchor
 
     return unless pagesTodo.length # Return if nothing to do
 
-    # Create the new highlights
-    created = for page in pagesTodo
-      @highlight[page] = @_createHighlight page
+    try
+      # Create the new highlights
+      created = for page in pagesTodo
+        @highlight[page] = @_createHighlight page
 
-    # Check if everything is rendered now
-    @fullyRealized = renderedPages.length is @endPage - @startPage + 1
+      # Check if everything is rendered now
+      @fullyRealized = renderedPages.length is @endPage - @startPage + 1
 
-    # Announce the creation of the highlights
-    @annotator.publish 'highlightsCreated', created
+      # Announce the creation of the highlights
+      @annotator.publish 'highlightsCreated', created
+    catch error
+      console.log "Error while trying to create highlight:", error.stack
+
+      @fullyRealized = false
+
+      # Try to undo the highlights already created
+      for page in pagesTodo when @highlight[page]
+        try
+          @highlight[page].removeFromDocument()
+          console.log "Removed LH from page", page
+        catch hlError
+          console.log "Could not remove HL from page", page, ":", hlError.stack
 
   # Remove the highlights for the given set of pages
   virtualize: (pageIndex) =>
@@ -47,7 +60,10 @@ class Anchor
 
     return unless highlight? # No highlight for this page
 
-    highlight.removeFromDocument()
+    try
+      highlight.removeFromDocument()
+    catch error
+      console.log "Could not remove HL from page", pageIndex, ":", error.stack
 
     delete @highlight[pageIndex]
 
