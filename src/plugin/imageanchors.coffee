@@ -205,8 +205,9 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
   annotate: (source, shape, geometry, tempID, annotoriousAnnotation) ->
     # Prepare a target describing selection
 
-    # Prepare data for Annotator about the selected target
+    # Prepare data for Annotator about the selection
     event =
+      # This is the target
       targets: [
         source: @annotator.getHref()
         selector: [
@@ -216,6 +217,7 @@ class Annotator.Plugin.ImageAnchors extends Annotator.Plugin
           geometry: geometry
         ]
       ]
+      # This extra info will be merged into the annotation
       annotationData:
         temporaryImageID: tempID
 
