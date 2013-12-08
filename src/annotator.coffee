@@ -112,7 +112,7 @@ class Annotator extends Delegator
     this._setupAnchorEvents()
     this._setupWrapper()
     this._setupDocumentAccessStrategies()
-    this._setupViewer()._setupEditor()
+    this._setupViewer()?._setupEditor()
     this._setupDynamicStyle()
 
     # Perform initial DOM scan, unless told not to.
