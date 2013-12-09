@@ -102,7 +102,7 @@ class Annotator.Plugin.TextAnchors extends Annotator.Plugin
       code: @createFromPositionSelector
 
     # Register the event handlers required for creating a selection
-    $(@annotator.wrapper).bind({
+    $(document).bind({
       "mouseup": @checkForEndSelection
     })
 
