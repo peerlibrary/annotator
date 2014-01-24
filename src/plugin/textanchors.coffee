@@ -103,7 +103,7 @@ class Annotator.Plugin.TextAnchors extends Annotator.Plugin
 
     # Register the event handlers required for creating a selection
     $(document).bind({
-      "mouseup": @checkForEndSelection
+      "mouseup.annotator": @checkForEndSelection
     })
 
     # Export these anchor types
