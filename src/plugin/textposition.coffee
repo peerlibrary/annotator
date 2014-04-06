@@ -42,6 +42,9 @@ class TextPositionAnchor extends Annotator.Anchor
 class Annotator.Plugin.TextPosition extends Annotator.Plugin
 
   pluginInit: ->
+
+    @Annotator = Annotator
+
     # Do we have the basic text anchors plugin loaded?
     unless @annotator.plugins.DomTextMapper
       throw new Error "The TextPosition Annotator plugin requires the DomTextMapper plugin."
@@ -59,7 +62,7 @@ class Annotator.Plugin.TextPosition extends Annotator.Plugin
       code: @createFromPositionSelector
 
     # Export the anchor type
-    @annotator.TextPositionAnchor = TextPositionAnchor
+    @Annotator.TextPositionAnchor = TextPositionAnchor
 
   # Create a TextPositionSelector around a range
   _getTextPositionSelector: (selection) =>

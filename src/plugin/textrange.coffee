@@ -110,7 +110,7 @@ class Annotator.Plugin.TextRange extends Annotator.Plugin
       # Create a TextPositionAnchor from the start and end offsets
       # of this range
       # (to be used with dom-text-mapper)
-      new TextPositionAnchor @annotator, annotation, target,
+      new @Annotator.TextPositionAnchor @annotator, annotation, target,
         startInfo.start, endInfo.end,
         (startInfo.pageIndex ? 0), (endInfo.pageIndex ? 0),
         currentQuote
