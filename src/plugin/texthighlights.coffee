@@ -153,7 +153,7 @@ class Annotator.Plugin.TextHighlights extends Annotator.Plugin
     switch anchor.type
       when "text range"
         # Simply create a span around this range
-        new TextHighlight anchor, 0, anchor.range
+        new TextHighlight anchor, page, anchor.range
       when "text position"
         if @annotator.domMapper?
           # First we create the range from the stored stard and end offsets
