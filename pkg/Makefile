@@ -30,6 +30,9 @@ PLUGINS=\
 	plugin/domtextmapper.coffee \
 	plugin/texthighlights.coffee \
 	plugin/textanchors.coffee \
+	plugin/textrange.coffee \
+	plugin/textposition.coffee \
+	plugin/textquote.coffee \
 	plugin/fuzzytextanchors.coffee \
 	plugin/pdf.coffee \
 	plugin/unsupported.coffee
