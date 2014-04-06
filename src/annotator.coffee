@@ -317,7 +317,7 @@ class Annotator extends Delegator
 
   # Do some normalization to get a "canonical" form of a string.
   # Used to even out some browser differences.
-  normalizeString: (string) -> string.replace /\s{2,}/g, " "
+  normalizeString: (string) -> string.trim().replace /\s+/g, " "
 
   # Find the given type of selector from an array of selectors, if it exists.
   # If it does not exist, null is returned.
