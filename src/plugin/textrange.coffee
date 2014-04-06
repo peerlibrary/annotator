@@ -23,18 +23,9 @@ class TextRangeAnchor extends Annotator.Anchor
 
   constructor: (annotator, annotation, target, @range, quote) ->
 
-    super annotator, annotation, target, 0, 0, quote
+    super annotator, annotation, target, "text range", 0, 0, quote
 
     unless @range? then throw new Error "range is required!"
-
-    @Annotator = TextRangeAnchor.Annotator
-
-  # This is how we create a highlight out of this kind of anchor
-  _createHighlight: ->
-
-    # Create the highligh
-    new @Annotator.TextHighlight this, 0, @range
-
 
 # Annotator plugin for creating, and anchoring based on text range
 # selectors

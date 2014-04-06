@@ -2,13 +2,11 @@
 # described using start and end character offsets
 class TextPositionAnchor extends Annotator.Anchor
 
-  @Annotator = Annotator
-
   constructor: (annotator, annotation, target,
       @start, @end, startPage, endPage,
       quote, diffHTML, diffCaseOnly) ->
 
-    super annotator, annotation, target,
+    super annotator, annotation, target, "text position",
       startPage, endPage,
       quote, diffHTML, diffCaseOnly
 
@@ -16,27 +14,6 @@ class TextPositionAnchor extends Annotator.Anchor
     # upon which this anchor is based upon.
     unless @start? then throw new Error "start is required!"
     unless @end? then throw new Error "end is required!"
-
-    @Annotator = TextPositionAnchor.Annotator
-
-  # This is how we create a highlight out of this kind of anchor
-  _createHighlight: (page) ->
-
-    # First we create the range from the stored stard and end offsets
-    mappings = @annotator.domMapper.getMappingsForCharRange @start, @end, [page]
-
-    # Get the wanted range out of the response of DTM
-    realRange = mappings.sections[page].realRange
-
-    # Get a BrowserRange
-    browserRange = new @Annotator.Range.BrowserRange realRange
-
-    # Get a NormalizedRange
-    normedRange = browserRange.normalize @annotator.wrapper[0]
-
-    # Create the highligh
-    new @Annotator.TextHighlight this, page, normedRange
-
 
 # Annotator plugin for text position-based anchoring
 class Annotator.Plugin.TextPosition extends Annotator.Plugin
