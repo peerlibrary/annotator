@@ -324,11 +324,11 @@ class Annotator.Plugin.TextAnchors extends Annotator.Plugin
       startOffset = startInfo.start
       endInfo = @annotator.domMapper.getInfoForNode normedRange.end
       endOffset = endInfo.end
-      @annotator.domMapper.getCorpus()[startOffset .. endOffset-1].trim()
+      @annotator.domMapper.getCorpus()[startOffset .. endOffset-1]
     else
       # Determine the current content of the given range directly
 
-      normedRange.text().trim()
+      normedRange.text()
 
     # Look up the saved quote
     savedQuote = @getQuoteForTarget target
