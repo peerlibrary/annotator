@@ -30,6 +30,9 @@
     <script src="pkg/annotator.domtextmapper.min.js"></script>
     <script src="pkg/annotator.texthighlights.min.js"></script>
     <script src="pkg/annotator.textanchors.min.js"></script>
+    <script src="pkg/annotator.textrange.min.js"></script>
+    <script src="pkg/annotator.textposition.min.js"></script>
+    <script src="pkg/annotator.textquote.min.js"></script>
 
     <!-- The Fuzzy tech anchoring plugin. Handles changed content. -->
     <script src="pkg/annotator.fuzzytextanchors.min.js"></script>
@@ -102,6 +105,9 @@
                        .annotator('addPlugin', 'DomTextMapper')
                        .annotator('addPlugin', 'TextHighlights')
                        .annotator('addPlugin', 'TextAnchors')
+                       .annotator('addPlugin', 'TextRange')
+                       .annotator('addPlugin', 'TextPosition')
+                       .annotator('addPlugin', 'TextQuote')
                        .annotator('addPlugin', 'FuzzyTextAnchors')
                        .annotator('addPlugin', 'Tags');
 
