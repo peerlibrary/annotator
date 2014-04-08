@@ -100,9 +100,9 @@ class Annotator.Plugin.TextAnchors extends Annotator.Plugin
       return if @annotator.isAnnotator(container)
 
     if selectedRanges.length
-      event.targets = []
+      event.segments = []
       for r in selectedRanges
-        event.targets.push @annotator.getTargetFromSelection
+        event.segments.push
           type: "text range"
           range: r
 
