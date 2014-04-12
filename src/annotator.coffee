@@ -104,7 +104,9 @@ class Annotator extends Delegator
   constructor: (element, options) ->
     super
     @plugins = {}
+    @selectorCreators = []
     @anchoringStrategies = []
+    @highlighters = []
 
     # Return early if the annotator is not supported.
     return this unless Annotator.supported()
@@ -628,6 +630,19 @@ class Annotator extends Delegator
       this.startViewerHideTimer()
     @mouseIsDown = true
 
+  # This is called to create a target from a raw selection,
+  # using selectors created by the registered selector creators
+  _getTargetFromSelection: (selection) =>
+    selectors = []
+    for c in @selectorCreators
+      description = c.describe selection
+      for selector in description
+        selectors.push selector
+
+    # Create the target
+    source: @getHref()
+    selector: selectors
+
   # This method is to be called by the mechanisms responsible for
   # triggering annotation (and highlight) creation.
   #
@@ -646,8 +661,8 @@ class Annotator extends Delegator
     # Check whether we got a proper event
     unless event?
       throw "Called onSuccessfulSelection without an event!"
-    unless event.targets?
-      throw "Called onSuccessulSelection with an event with missing targets!"
+    unless event.segments?
+      throw "Called onSuccessulSelection with an event with missing segments!"
 
     # Are we allowed to create annotations?
     unless @canAnnotate
@@ -655,8 +670,8 @@ class Annotator extends Delegator
       #  @Annotator.Notification.INFO
       return false
 
-    # Store the selected targets
-    @selectedTargets = event.targets
+    # Describe the selection with targets
+    @selectedTargets = @_getTargetFromSelection s for s in event.segments
 
     # Do we want immediate annotation?
     if immediate
@@ -795,6 +810,15 @@ class Annotator extends Delegator
     # Delete highlight elements.
     this.deleteAnnotation annotation
 
+  # Create a highlight for an anchor, using one of the registered
+  # highlighting implementations.
+  _createHighlight: (anchor, page) ->
+    for h in @highlighters
+      result = h.highlight anchor, page
+      if result
+        return result
+    throw new Error "No highlighter that could handle anchor type" +anchor.type
+
   # Collect all the highlights (optionally for a given set of annotations)
   getHighlights: (annotations) ->
     results = []
@@ -825,8 +849,8 @@ class Annotator extends Delegator
     for anchor in @anchors[index] ? []
       anchor.virtualize index
 
-  onAnchorMouseover: (annotations, highlightType) ->
-    #console.log "Mouse over annotations:", annotations
+  onAnchorMouseover: (event) ->
+    #console.log "Mouse over annotations:", event.data.getAnnotations event
 
     # Cancel any pending hiding of the viewer.
     this.clearViewerHideTimer()
@@ -835,17 +859,18 @@ class Annotator extends Delegator
     # already displaying the viewer
     return false if @mouseIsDown or @viewer.isShown()
 
-    this.showViewer(annotations, util.mousePosition(event, @wrapper[0]))
+    this.showViewer event.data.getAnnotations(event),
+      util.mousePosition(event, @wrapper[0])
 
-  onAnchorMouseout: (annotations, highlightType) ->
-    #console.log "Mouse out on annotations:", annotations
+  onAnchorMouseout: (event) ->
+    #console.log "Mouse out on annotations:", event.data.getAnnotations event
     this.startViewerHideTimer()
 
-  onAnchorMousedown: (annotations, highlightType) ->
-    #console.log "Mouse down on annotations:", annotations
+  onAnchorMousedown: (event) ->
+    #console.log "Mouse down on annotations:", event.data.getAnnotations event
 
-  onAnchorClick: (annotations, highlightType) ->
-    #console.log "Click on annotations:", annotations
+  onAnchorClick: (event) ->
+    #console.log "Click on annotations:", event.data.getAnnotations event
 
 # Create namespace for Annotator plugins
 class Annotator.Plugin extends Delegator

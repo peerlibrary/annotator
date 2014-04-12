@@ -5,45 +5,35 @@ class TextHighlight extends Annotator.Highlight
 
   # Save the Annotator class reference, while we have access to it.
   # TODO: Is this really the way to go? How do other plugins do it?
-  @Annotator = Annotator
   @$ = Annotator.$
   @highlightType = 'TextHighlight'
 
-  # Is this element a text highlight physical anchor ?
-  @isInstance: (element) -> @$(element).hasClass 'annotator-hl'
-
-  # Find the first parent outside this physical anchor
-  @getIndependentParent: (element) ->
-    @$(element).parents(':not([class^=annotator-hl])')[0]
-
   # List of annotators we have already set up events for
   @_inited: []
+
+  # Collect the annotations impacted by an event
+  @getAnnotations: (event) ->
+    TextHighlight.$(event.target)
+      .parents('.annotator-hl')
+      .andSelf()
+      .map( -> TextHighlight.$(this).data("annotation"))
+      .toArray()
 
   # Set up events for this annotator
   @_init: (annotator) ->
     return if annotator in @_inited
 
-    getAnnotations = (event) ->
-      # Collect the involved annotations
-      annotations = TextHighlight.$(event.target)
-        .parents('.annotator-hl')
-        .andSelf()
-        .map -> return TextHighlight.$(this).data("annotation")
+    annotator.element.delegate ".annotator-hl", "mouseover", this,
+       (event) => annotator.onAnchorMouseover event
 
-      # Make a proper array out of the list
-      TextHighlight.$.makeArray annotations
+    annotator.element.delegate ".annotator-hl", "mouseout", this,
+       (event) => annotator.onAnchorMouseout event
 
-    annotator.addEvent ".annotator-hl", "mouseover", (event) =>
-      annotator.onAnchorMouseover getAnnotations event, @highlightType
+    annotator.element.delegate ".annotator-hl", "mousedown", this,
+       (event) => annotator.onAnchorMousedown event
 
-    annotator.addEvent ".annotator-hl", "mouseout", (event) =>
-      annotator.onAnchorMouseout getAnnotations event, @highlightType
-
-    annotator.addEvent ".annotator-hl", "mousedown", (event) =>
-      annotator.onAnchorMousedown getAnnotations event, @highlightType
-
-    annotator.addEvent ".annotator-hl", "click", (event) =>
-      annotator.onAnchorClick getAnnotations event, @highlightType
+    annotator.element.delegate ".annotator-hl", "click", this,
+       (event) => annotator.onAnchorClick event
 
     @_inited.push annotator
 
@@ -91,7 +81,6 @@ class TextHighlight extends Annotator.Highlight
     TextHighlight._init @annotator
 
     @$ = TextHighlight.$
-    @Annotator = TextHighlight.Annotator
 
     # Create a highlights, and link them with the annotation
     @_highlights = @_highlightRange normedRange
@@ -117,6 +106,13 @@ class TextHighlight extends Annotator.Highlight
     else
       @$(@_highlights).removeClass('annotator-hl-active')
 
+  # Mark/unmark this hl as focused
+  setFocused: (value) ->
+    if value
+      @$(@_highlights).addClass('annotator-hl-focused')
+    else
+      @$(@_highlights).removeClass('annotator-hl-focused')
+
   # Remove all traces of this hl from the document
   removeFromDocument: ->
     for hl in @_highlights
@@ -137,6 +133,49 @@ class TextHighlight extends Annotator.Highlight
 class Annotator.Plugin.TextHighlights extends Annotator.Plugin
 
   # Plugin initialization
-  pluginInit: ->
-    # Export the text highlight class for other plugins
-    Annotator.TextHighlight = TextHighlight
+  pluginInit: =>
+
+    @Annotator = Annotator
+    @$ = Annotator.$
+
+    # Register this highlighting implementation
+    @annotator.highlighters.push
+      name: "standard text highlighter"
+      highlight: @_createTextHighlight
+      isInstance: @_isInstance
+      getIndependentParent: @_getIndependentParent
+
+  _createTextHighlight: (anchor, page) =>
+    switch anchor.type
+      when "text range"
+        # Simply create a span around this range
+        new TextHighlight anchor, page, anchor.range
+      when "text position"
+        if @annotator.domMapper?
+          # First we create the range from the stored stard and end offsets
+          mappings = @annotator.domMapper.getMappingsForCharRange anchor.start, anchor.end, [page]
+
+          # Get the wanted range out of the response of DTM
+          realRange = mappings.sections[page].realRange
+
+          # Get a BrowserRange
+          browserRange = new @Annotator.Range.BrowserRange realRange
+
+          # Get a NormalizedRange
+          normedRange = browserRange.normalize @annotator.wrapper[0]
+
+          # Create the highligh
+          new TextHighlight anchor, page, normedRange
+        else
+          # Can't do this without DTM.
+          null
+      else
+        # Unsupported anchor type
+        null
+
+  # Is this element a text highlight physical anchor ?
+  _isInstance: (element) => @$(element).hasClass 'annotator-hl'
+
+  # Find the first parent outside this physical anchor
+  _getIndependentParent: (element) =>
+    @$(element).parents(':not([class^=annotator-hl])')[0]
