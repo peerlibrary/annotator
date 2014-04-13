@@ -671,7 +671,7 @@ class Annotator extends Delegator
       return false
 
     # Describe the selection with targets
-    @selectedTargets = @_getTargetFromSelection s for s in event.segments
+    @selectedTargets = (@_getTargetFromSelection s for s in event.segments)
 
     # Do we want immediate annotation?
     if immediate

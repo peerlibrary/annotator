@@ -119,7 +119,7 @@ class Annotator.Plugin.TextAnchors extends Annotator.Plugin
       return unless @isThisSupposedToBeAnnotated range.commonAncestor
 
     # Put the selected segments into the event
-    event.segments = {type: "text range", range: r} for r in selectedRanges
+    event.segments = ({type: "text range", range: r} for r in selectedRanges)
 
     # Do we have valid page coordinates inside the event
     # which has triggered this function?
