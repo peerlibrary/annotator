@@ -3,10 +3,6 @@ class Annotator.Plugin.TextAnchors extends Annotator.Plugin
 
   # Plugin initialization
   pluginInit: ->
-    # We need text highlights
-    unless @annotator.plugins.TextHighlights
-      throw new Error "The TextAnchors Annotator plugin requires the TextHighlights plugin."
-
     @Annotator = Annotator
     @$ = Annotator.$
 
